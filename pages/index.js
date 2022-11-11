@@ -15,6 +15,12 @@ const HomePage = () => (
         <img src="/logo-primevideo.svg" />
       </div>
     </a>
+
+    <a href="https://app.plex.tv/">
+      <div className={styles.plex}>
+        <img src="/logo-plex.svg" />
+      </div>
+    </a>
   </main>
 )
 
