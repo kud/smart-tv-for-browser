@@ -47,3 +47,8 @@
   composes: item;
   background-color: #fff;
 }
+
+.plex {
+  composes: item;
+  background-color: #222;
+}
