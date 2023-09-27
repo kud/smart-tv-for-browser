@@ -1,27 +1,92 @@
-import Head from "next/head"
-import Image from "next/image"
-import styles from "../styles/Home.module.css"
+import { useState, useEffect } from "react"
 
-const HomePage = () => (
-  <main className={styles.root}>
-    <a href="https://www.netflix.com">
-      <div className={styles.netflix}>
-        <img src="/logo-netflix.svg" />
-      </div>
-    </a>
+import servicesConfig from "config/services.json"
 
-    <a href="https://www.primevideo.com/">
-      <div className={styles.primeVideo}>
-        <img src="/logo-primevideo.svg" />
-      </div>
-    </a>
+import KeyboardSettingsToggle from "components/KeyboardSettingsToggle"
 
-    <a href="https://app.plex.tv/">
-      <div className={styles.plex}>
-        <img src="/logo-plex.svg" />
+import styles from "styles/Home.module.css"
+
+const defaultServices = Object.keys(servicesConfig).reduce((acc, service) => {
+  acc[service] = true
+
+  return acc
+}, {})
+
+const HomePage = () => {
+  const [services, setServices] = useState(null)
+  const [loadedFromLocalStorage, setLoadedFromLocalStorage] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
+
+  const toggleSettingsVisibility = () => {
+    setShowSettings(!showSettings)
+  }
+
+  const toggleService = (serviceKey) => {
+    setServices((prev) => ({
+      ...prev,
+      [serviceKey]: !prev[serviceKey],
+    }))
+  }
+
+  useEffect(() => {
+    const savedServices = JSON.parse(localStorage.getItem("services"))
+
+    if (savedServices) {
+      const mergedServices = { ...defaultServices, ...savedServices }
+      setServices(mergedServices)
+    } else {
+      setServices(defaultServices)
+    }
+
+    setLoadedFromLocalStorage(true)
+  }, [])
+
+  useEffect(() => {
+    if (loadedFromLocalStorage) {
+      localStorage.setItem("services", JSON.stringify(services))
+    }
+  }, [services, loadedFromLocalStorage])
+
+  return (
+    <main className={styles.root}>
+      <div className={styles.container}>
+        <KeyboardSettingsToggle onToggle={toggleSettingsVisibility} />
+
+        {services &&
+          Object.keys(servicesConfig).map(
+            (serviceKey) =>
+              services[serviceKey] && (
+                <a key={serviceKey} href={servicesConfig[serviceKey].link}>
+                  <div
+                    className={styles.item}
+                    style={{
+                      backgroundColor:
+                        servicesConfig[serviceKey].backgroundColor,
+                    }}
+                  >
+                    <img src={servicesConfig[serviceKey].logo} />
+                  </div>
+                </a>
+              ),
+          )}
+
+        {showSettings && (
+          <div className={styles.settings}>
+            {Object.keys(servicesConfig).map((serviceKey) => (
+              <div key={serviceKey}>
+                <input
+                  type="checkbox"
+                  checked={services[serviceKey]}
+                  onChange={() => toggleService(serviceKey)}
+                />{" "}
+                {servicesConfig[serviceKey].name}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
-    </a>
-  </main>
-)
+    </main>
+  )
+}
 
 export default HomePage
