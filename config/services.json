@@ -3,7 +3,7 @@
     "name": "Netflix",
     "logo": "/logo-netflix.svg",
     "link": "https://www.netflix.com",
-    "backgroundColor": "#222"
+    "backgroundColor": "#0b0b0b"
   },
   "primeVideo": {
     "name": "Prime Video",
@@ -39,6 +39,12 @@
     "name": "Arte",
     "logo": "/logo-arte.svg",
     "link": "https://www.arte.tv/",
+    "backgroundColor": "#f7f7f7"
+  },
+  "youtube": {
+    "name": "YouTube",
+    "logo": "/logo-youtube.svg",
+    "link": "https://www.youtube.com/",
     "backgroundColor": "#f7f7f7"
   }
 }
