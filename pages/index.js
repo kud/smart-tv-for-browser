@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react"
+import clsx from "clsx"
 
 import servicesConfig from "config/services.json"
 
@@ -49,29 +50,17 @@ const HomePage = () => {
 
   return (
     <main className={styles.root}>
-      <div className={styles.container}>
-        <KeyboardSettingsToggle onToggle={toggleSettingsVisibility} />
+      <KeyboardSettingsToggle onToggle={toggleSettingsVisibility} />
 
-        {services &&
-          Object.keys(servicesConfig).map(
-            (serviceKey) =>
-              services[serviceKey] && (
-                <a key={serviceKey} href={servicesConfig[serviceKey].link}>
-                  <div
-                    className={styles.item}
-                    style={{
-                      backgroundColor:
-                        servicesConfig[serviceKey].backgroundColor,
-                    }}
-                  >
-                    <img src={servicesConfig[serviceKey].logo} />
-                  </div>
-                </a>
-              ),
-          )}
+      {services && (
+        <>
+          <div
+            className={clsx(styles.settings, {
+              [styles.settingsShow]: showSettings,
+            })}
+          >
+            <h3>Services</h3>
 
-        {showSettings && (
-          <div className={styles.settings}>
             {Object.keys(servicesConfig).map((serviceKey) => (
               <div key={serviceKey}>
                 <input
@@ -83,8 +72,27 @@ const HomePage = () => {
               </div>
             ))}
           </div>
-        )}
-      </div>
+
+          <div className={styles.container}>
+            {Object.keys(servicesConfig).map(
+              (serviceKey) =>
+                services[serviceKey] && (
+                  <a key={serviceKey} href={servicesConfig[serviceKey].link}>
+                    <div
+                      className={styles.item}
+                      style={{
+                        backgroundColor:
+                          servicesConfig[serviceKey].backgroundColor,
+                      }}
+                    >
+                      <img src={servicesConfig[serviceKey].logo} />
+                    </div>
+                  </a>
+                ),
+            )}
+          </div>
+        </>
+      )}
     </main>
   )
 }
