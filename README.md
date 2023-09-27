@@ -9,7 +9,7 @@ Welcome to SmartTV for Browser – an immersive, intelligent, and intuitive inte
 This interface is designed with simplicity and usability at its core. When on the SmartTV homepage:
 
 1. **Accessing the Sidebar**:
-   To view the sidebar with all available channels, simply press the combination of `Z + X + C` keys simultaneously.
+   To view the sidebar with all available channels, simply press the combination of `x + c + v` keys simultaneously.
 
 2. **Customizing Channels**:
    Once the sidebar is displayed, you'll have the freedom to add or remove any channels to personalize your viewing experience. Click on a channel to toggle its presence on your homepage.

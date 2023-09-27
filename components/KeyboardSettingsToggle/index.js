@@ -5,7 +5,7 @@ import useKeyboardJs from "react-use/lib/useKeyboardJs"
 import debounce from "lodash.debounce"
 
 const KeyboardSettingsToggle = ({ onToggle }) => {
-  const [isPressed] = useKeyboardJs("z + x + c")
+  const [isPressed] = useKeyboardJs("x + c + v")
 
   const debouncedOnToggle = useMemo(() => debounce(onToggle, 500), [onToggle])
 
