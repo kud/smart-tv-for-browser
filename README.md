@@ -1,34 +1,51 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# SmartTV for Browser
+
+Welcome to SmartTV for Browser – an immersive, intelligent, and intuitive interface for watching television right from your computer. Powered by [Next.js](https://nextjs.org/), this project is designed to provide users with a seamless homepage experience when they want to dive into the world of television on their computers.
+
+## Overview
+
+Instead of sticking to traditional TV mediums, the SmartTV for Browser lets you easily navigate and access a plethora of entertainment options directly from your browser. With features optimized for the digital experience, it's the future of television at your fingertips.
 
 ## Getting Started
 
-First, run the development server:
+To set up and run the SmartTV for Browser on your local machine:
 
-```bash
-npm run dev
-# or
-yarn dev
-```
+1. **Install dependencies**:
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+   ```bash
+   npm install
+   # or
+   yarn install
+   ```
 
-You can start editing the page by modifying `pages/index.js`. The page auto-updates as you edit the file.
+2. **Run the development server**:
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.js`.
+   ```bash
+   npm run dev
+   # or
+   yarn dev
+   ```
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
+3. **Access locally**:
+   Open [http://localhost:3000](http://localhost:3000) with your browser to see the result. As you navigate and explore, you'll experience the dynamic features designed for a captivating viewing experience.
+
+4. **Editing & Customization**:
+   Begin by exploring `pages/index.js`. The platform is built to be modular and extensible. The page auto-updates as you make edits, allowing for a rapid development cycle.
+
+5. **API routes**:
+   The project also supports API routes. Access sample endpoint at [http://localhost:3000/api/hello](http://localhost:3000/api/hello). API logic can be found and extended in `pages/api/hello.js`.
 
 ## Learn More
 
-To learn more about Next.js, take a look at the following resources:
+If you're new to Next.js or wish to delve deeper:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- [Next.js Documentation](https://nextjs.org/docs) - Comprehensive guide on Next.js features and its API.
+- [Learn Next.js](https://nextjs.org/learn) - An interactive tutorial on Next.js.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+For contributions or to understand the core codebase better, visit [the Next.js GitHub repository](https://github.com/vercel/next.js/). Feedback and contributions are always appreciated!
 
-## Deploy on Vercel
+## Deployment
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+To bring the SmartTV for Browser experience to everyone, deploy using the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme), the official deployment solution from the creators of Next.js.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+For a step-by-step guide, refer to the [Next.js deployment documentation](https://nextjs.org/docs/deployment).
