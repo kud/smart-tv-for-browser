@@ -3,7 +3,7 @@ import clsx from "clsx"
 
 import servicesConfig from "config/services.json"
 
-import KeyboardSettingsToggle from "components/KeyboardSettingsToggle"
+import KeyboardSettingsToggle from "components/keyboard-settings-toggle"
 
 import styles from "styles/Home.module.css"
 
