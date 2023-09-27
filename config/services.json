@@ -1,0 +1,44 @@
+{
+  "netflix": {
+    "name": "Netflix",
+    "logo": "/logo-netflix.svg",
+    "link": "https://www.netflix.com",
+    "backgroundColor": "#222"
+  },
+  "primeVideo": {
+    "name": "Prime Video",
+    "logo": "/logo-primevideo.svg",
+    "link": "https://www.primevideo.com/",
+    "backgroundColor": "#fff"
+  },
+  "plex": {
+    "name": "Plex",
+    "logo": "/logo-plex.svg",
+    "link": "https://app.plex.tv/",
+    "backgroundColor": "#222"
+  },
+  "disneyplus": {
+    "name": "Plex",
+    "logo": "/logo-disneyplus.svg",
+    "link": "https://www.disneyplus.com/",
+    "backgroundColor": "#040c3c"
+  },
+  "nowtv": {
+    "name": "Now TV",
+    "logo": "/logo-nowtv.svg",
+    "link": "https://www.nowtv.com/",
+    "backgroundColor": "#f7f7f7"
+  },
+  "bbcIplayer": {
+    "name": "BBC iPlayer",
+    "logo": "/logo-bbciplayer.svg",
+    "link": "https://www.bbc.co.uk/iplayer",
+    "backgroundColor": "#f7f7f7"
+  },
+  "arte": {
+    "name": "Arte",
+    "logo": "/logo-arte.svg",
+    "link": "https://www.arte.tv/",
+    "backgroundColor": "#f7f7f7"
+  }
+}
