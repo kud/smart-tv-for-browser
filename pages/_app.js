@@ -1,4 +1,6 @@
 import Head from "next/head"
+import { NextUIProvider } from "@nextui-org/react"
+import { ThemeProvider as NextThemesProvider } from "next-themes"
 
 import "styles/globals.css"
 
@@ -15,7 +17,12 @@ const App = ({ Component, pageProps }) => (
         content="SmartTV, Next-gen TV, 4K, UHD, Streaming, Intelligent Television, Entertainment, Immersive Experience, TV Apps"
       />
     </Head>
-    <Component {...pageProps} />
+
+    <NextUIProvider>
+      <NextThemesProvider attribute="class" defaultTheme="dark">
+        <Component {...pageProps} />
+      </NextThemesProvider>
+    </NextUIProvider>
   </>
 )
 

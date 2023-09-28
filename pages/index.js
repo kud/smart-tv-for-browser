@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import clsx from "clsx"
+import { Checkbox } from "@nextui-org/react"
 
 import servicesConfig from "config/services.json"
 
@@ -56,21 +57,28 @@ const HomePage = () => {
         <>
           <div
             className={clsx(styles.settings, {
-              [styles.settingsShow]: showSettings,
+              [styles.settings__show]: showSettings,
             })}
           >
-            <h3>Services</h3>
+            <h2 className={styles.settingsHeading}>Services</h2>
 
-            {Object.keys(servicesConfig).map((serviceKey) => (
-              <div key={serviceKey}>
-                <input
-                  type="checkbox"
-                  checked={services[serviceKey]}
-                  onChange={() => toggleService(serviceKey)}
-                />{" "}
-                {servicesConfig[serviceKey].name}
-              </div>
-            ))}
+            {Object.keys(servicesConfig)
+              .sort()
+              .map((serviceKey) => (
+                <div key={serviceKey} className={styles.settingsService}>
+                  <Checkbox
+                    size="sm"
+                    checked={services[serviceKey]}
+                    isSelected={services[serviceKey]}
+                    onValueChange={() => toggleService(serviceKey)}
+                    id={serviceKey}
+                  >
+                    <div className={styles.settingsServiceLabel}>
+                      {servicesConfig[serviceKey].name}
+                    </div>
+                  </Checkbox>
+                </div>
+              ))}
           </div>
 
           <div className={styles.container}>
