@@ -60,7 +60,7 @@ const HomePage = () => {
   useEffect(() => {
     const savedServices = JSON.parse(localStorage.getItem("services") ?? "{}")
     const savedImageSize = parseInt(
-      localStorage.getItem("imageSize") ?? "100",
+      localStorage.getItem("imageSize") ?? "200",
       10,
     )
 
