@@ -29,7 +29,7 @@ const HomePage = () => {
   const [showSettings, setShowSettings] = useState(false)
   const [showOverlay, setShowOverlay] = useState(true)
   const [isOverlayVisible, setIsOverlayVisible] = useState(true)
-  const [imageSize, setImageSize] = useState(100)
+  const [imageSize, setImageSize] = useState(200)
 
   const toggleSettingsVisibility = () => {
     setShowSettings(!showSettings)
