@@ -1,6 +1,6 @@
 import { Checkbox } from "@nextui-org/react"
 
-import styles from "styles/Home.module.css"
+import styles from "./index.module.css"
 
 const ServiceCheckbox = ({
   serviceKey,
