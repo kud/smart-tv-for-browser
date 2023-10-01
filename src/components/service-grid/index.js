@@ -1,4 +1,4 @@
-import styles from "styles/Home.module.css"
+import styles from "./index.module.css"
 
 const ServiceGrid = ({ servicesConfig, selectedServices }) => {
   const handleKeyPress = (event, link) => {
