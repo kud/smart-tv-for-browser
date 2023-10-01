@@ -29,6 +29,7 @@ const HomePage = () => {
   const [showSettings, setShowSettings] = useState(false)
   const [showOverlay, setShowOverlay] = useState(true)
   const [isOverlayVisible, setIsOverlayVisible] = useState(true)
+  const [imageSize, setImageSize] = useState(100)
 
   const toggleSettingsVisibility = () => {
     setShowSettings(!showSettings)
@@ -58,6 +59,10 @@ const HomePage = () => {
 
   useEffect(() => {
     const savedServices = JSON.parse(localStorage.getItem("services") ?? "{}")
+    const savedImageSize = parseInt(
+      localStorage.getItem("imageSize") ?? "100",
+      10,
+    )
 
     if (savedServices) {
       const mergedServices = { ...defaultServices, ...savedServices }
@@ -66,14 +71,16 @@ const HomePage = () => {
       setServices(defaultServices)
     }
 
+    setImageSize(savedImageSize)
     setLoadedFromLocalStorage(true)
   }, [])
 
   useEffect(() => {
     if (loadedFromLocalStorage) {
       localStorage.setItem("services", JSON.stringify(services))
+      localStorage.setItem("imageSize", imageSize.toString())
     }
-  }, [services, loadedFromLocalStorage])
+  }, [services, imageSize, loadedFromLocalStorage])
 
   return (
     <main className={styles.root}>
@@ -86,11 +93,14 @@ const HomePage = () => {
             selectedServices={services}
             onServiceToggle={toggleService}
             showSettings={showSettings}
+            imageSize={imageSize}
+            onImageSizeChange={setImageSize}
           />
 
           <ServiceGrid
             servicesConfig={servicesConfig}
             selectedServices={services}
+            imageSize={imageSize}
           />
         </>
       )}

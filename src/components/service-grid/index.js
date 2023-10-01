@@ -1,6 +1,6 @@
 import styles from "./index.module.css"
 
-const ServiceGrid = ({ servicesConfig, selectedServices }) => {
+const ServiceGrid = ({ servicesConfig, selectedServices, imageSize }) => {
   const handleKeyPress = (event, link) => {
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault()
@@ -26,6 +26,8 @@ const ServiceGrid = ({ servicesConfig, selectedServices }) => {
                 className={styles.item}
                 style={{
                   backgroundColor: servicesConfig[serviceKey].backgroundColor,
+                  width: `${imageSize}px`,
+                  height: `${imageSize}px`,
                 }}
               >
                 <img alt="" src={servicesConfig[serviceKey].logo} />
