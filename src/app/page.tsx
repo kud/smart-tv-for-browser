@@ -1,22 +1,30 @@
+"use client"
+
 import { useState, useEffect } from "react"
 import clsx from "clsx"
 
-import servicesConfig from "config/services.json"
+import servicesConfig from "@/config/services.json"
 
-import KeyboardSettingsToggle from "components/keyboard-settings-toggle"
-import ServiceList from "components/service-list"
-import ServiceGrid from "components/service-grid"
+import KeyboardSettingsToggle from "@/components/keyboard-settings-toggle"
+import ServiceList from "@/components/service-list"
+import ServiceGrid from "@/components/service-grid"
 
-import styles from "styles/Home.module.css"
+import styles from "./page.module.css"
 
-const defaultServices = Object.keys(servicesConfig).reduce((acc, service) => {
-  acc[service] = true
+type ServiceConfigType = {
+  [key: string]: boolean
+}
 
-  return acc
-}, {})
+const defaultServices = Object.keys(servicesConfig).reduce<ServiceConfigType>(
+  (acc, service) => {
+    acc[service] = true
+    return acc
+  },
+  {},
+)
 
 const HomePage = () => {
-  const [services, setServices] = useState(null)
+  const [services, setServices] = useState<ServiceConfigType | null>(null)
   const [loadedFromLocalStorage, setLoadedFromLocalStorage] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [showOverlay, setShowOverlay] = useState(true)
@@ -26,11 +34,16 @@ const HomePage = () => {
     setShowSettings(!showSettings)
   }
 
-  const toggleService = (serviceKey) => {
-    setServices((prev) => ({
-      ...prev,
-      [serviceKey]: !prev[serviceKey],
-    }))
+  const toggleService = (serviceKey: string) => {
+    setServices((prev) => {
+      if (typeof prev === "object" && prev !== null) {
+        return {
+          ...prev,
+          [serviceKey]: !prev[serviceKey],
+        }
+      }
+      return prev
+    })
   }
 
   useEffect(() => {
@@ -44,7 +57,7 @@ const HomePage = () => {
   }, [])
 
   useEffect(() => {
-    const savedServices = JSON.parse(localStorage.getItem("services"))
+    const savedServices = JSON.parse(localStorage.getItem("services") ?? "{}")
 
     if (savedServices) {
       const mergedServices = { ...defaultServices, ...savedServices }
