@@ -1,7 +1,8 @@
-import ServiceCheckbox from "components/service-checkbox"
 import clsx from "clsx"
 
-import styles from "styles/Home.module.css"
+import ServiceCheckbox from "@/components/service-checkbox"
+
+import styles from "./index.module.css"
 
 const ServiceList = ({
   servicesConfig,
