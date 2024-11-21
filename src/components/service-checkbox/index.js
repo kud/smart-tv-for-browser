@@ -16,7 +16,7 @@ const ServiceCheckbox = ({
       onValueChange={onToggle}
       id={serviceKey}
     >
-      <div className={styles.settingsServiceLabel}>{serviceConfig.name}</div>
+      <span className={styles.settingsServiceLabel}>{serviceConfig.name}</span>
     </Checkbox>
   </div>
 )
