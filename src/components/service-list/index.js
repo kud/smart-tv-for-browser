@@ -30,6 +30,7 @@ const ServiceList = ({
               serviceKey={serviceKey}
               serviceConfig={servicesConfig[serviceKey]}
               isChecked={selectedServices[serviceKey]}
+              onToggle={() => onServiceToggle(serviceKey)}
             />
           </div>
         ))}
