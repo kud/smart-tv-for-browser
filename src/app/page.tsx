@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import clsx from "clsx"
+import { FaCog } from "react-icons/fa"
 
 import servicesConfig from "@/config/services.json"
 
@@ -112,6 +113,13 @@ const HomePage = () => {
           })}
         ></div>
       )}
+
+      <button
+        className={styles.settingsButton}
+        onClick={toggleSettingsVisibility}
+      >
+        <FaCog />
+      </button>
     </main>
   )
 }

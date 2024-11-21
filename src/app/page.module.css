@@ -23,3 +23,27 @@
   opacity: 0;
   pointer-events: none;
 }
+
+.settingsButton {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  background-color: #2c2c2c;
+  border: 2px solid #555;
+  border-radius: 50%;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  z-index: 1100;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.3s ease;
+  opacity: 0.7;
+}
+
+.settingsButton:hover {
+  opacity: 1;
+}
