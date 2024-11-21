@@ -17,17 +17,21 @@ const ServiceList = ({
   >
     <h2 className={styles.settingsHeading}>Services</h2>
 
-    <div>
+    <div className={styles.settingsList}>
       {Object.keys(servicesConfig)
         .sort()
         .map((serviceKey) => (
-          <ServiceCheckbox
+          <div
             key={serviceKey}
-            serviceKey={serviceKey}
-            serviceConfig={servicesConfig[serviceKey]}
-            isChecked={selectedServices[serviceKey]}
-            onToggle={() => onServiceToggle(serviceKey)}
-          />
+            className={styles.settingsListItem}
+            onClick={() => onServiceToggle(serviceKey)}
+          >
+            <ServiceCheckbox
+              serviceKey={serviceKey}
+              serviceConfig={servicesConfig[serviceKey]}
+              isChecked={selectedServices[serviceKey]}
+            />
+          </div>
         ))}
     </div>
 
