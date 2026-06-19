@@ -8,14 +8,16 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "build:extension": "node extension/generate-manifest.js"
+    "build:extension": "node extension/generate-manifest.js",
+    "party:dev": "partykit dev",
+    "party:deploy": "partykit deploy"
   },
   "dependencies": {
     "@noriginmedia/norigin-spatial-navigation": "3.2.0",
     "clsx": "2.1.1",
     "motion": "12.40.0",
     "next": "16.2.9",
-    "peerjs": "1.5.5",
+    "partysocket": "1.2.0",
     "qrcode": "1.5.4",
     "react": "19.2.7",
     "react-dom": "19.2.7",
@@ -29,6 +31,7 @@
     "@types/react-dom": "19.2.3",
     "eslint": "9.39.4",
     "eslint-config-next": "16.2.9",
+    "partykit": "0.0.115",
     "postcss": "8.4.49",
     "tailwindcss": "4.3.1",
     "typescript": "6.0.3"

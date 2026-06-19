@@ -1,6 +1,6 @@
 // Shared contract between the TV (receiver) and the phone remote page. Commands
-// travel over a WebRTC data channel brokered by PeerJS — see use-remote-receiver
-// (TV) and app/remote (phone).
+// travel through a PartyKit room named by the pairing code — see party/remote.ts
+// (relay), use-remote-receiver (TV) and app/remote (phone).
 
 // The only actions a remote may trigger. Each maps to the keyboard key the TV
 // already understands, so the receiver just re-dispatches it. This allowlist is
@@ -29,9 +29,21 @@ export const isRemoteMessage = (value: unknown): value is RemoteMessage => {
   )
 }
 
-// Namespace ids on the shared public PeerJS broker so our short codes don't
-// collide with unrelated apps' peers.
-const PEER_PREFIX = "smarttv-"
+type PresenceMessage = { type: "presence"; count: number }
+
+export const isPresenceMessage = (value: unknown): value is PresenceMessage => {
+  if (!value || typeof value !== "object") return false
+  const message = value as Record<string, unknown>
+  return message.type === "presence" && typeof message.count === "number"
+}
+
+export const parseMessage = (raw: string): unknown => {
+  try {
+    return JSON.parse(raw)
+  } catch {
+    return null
+  }
+}
 
 // Excludes easily-confused characters (0/O, 1/I) for a readable pairing code.
 const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
@@ -43,5 +55,11 @@ export const makeCode = () =>
     () => CODE_ALPHABET[Math.floor(Math.random() * CODE_ALPHABET.length)],
   ).join("")
 
-export const peerIdForCode = (code: string) =>
-  `${PEER_PREFIX}${code.toUpperCase()}`
+// PartyKit relay host: a local dev server in development, the deployed relay in
+// production. Override with NEXT_PUBLIC_PARTYKIT_HOST (e.g. to point at a LAN IP
+// running `partykit dev`).
+export const PARTYKIT_HOST =
+  process.env.NEXT_PUBLIC_PARTYKIT_HOST ??
+  (process.env.NODE_ENV === "development"
+    ? "127.0.0.1:1999"
+    : "smart-tv.kud.partykit.dev")

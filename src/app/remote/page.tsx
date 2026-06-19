@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import type { DataConnection } from "peerjs"
+import PartySocket from "partysocket"
 import {
   FiChevronUp,
   FiChevronDown,
@@ -11,7 +11,13 @@ import {
   FiMenu,
 } from "react-icons/fi"
 
-import { peerIdForCode, CODE_LENGTH, type RemoteAction } from "@/lib/remote"
+import {
+  CODE_LENGTH,
+  PARTYKIT_HOST,
+  isPresenceMessage,
+  parseMessage,
+  type RemoteAction,
+} from "@/lib/remote"
 
 type Status = "idle" | "connecting" | "connected" | "error"
 
@@ -31,50 +37,98 @@ const STATUS_DOT: Record<Status, string> = {
 
 const RemotePage = () => {
   const [status, setStatus] = useState<Status>("idle")
+  const [detail, setDetail] = useState<string | null>(null)
   const [code, setCode] = useState("")
-  const connRef = useRef<DataConnection | null>(null)
+  const [logs, setLogs] = useState<string[]>([])
+  const [showLogs, setShowLogs] = useState(false)
+  const [copied, setCopied] = useState(false)
+  const socketRef = useRef<PartySocket | null>(null)
 
-  const connect = useCallback(async (raw: string) => {
-    const target = raw.trim().toUpperCase()
-    if (target.length !== CODE_LENGTH) return
+  const copyLogs = () => {
+    navigator.clipboard
+      ?.writeText(logs.join("\n"))
+      .then(() => {
+        setCopied(true)
+        window.setTimeout(() => setCopied(false), 1500)
+      })
+      .catch(() => {})
+  }
 
-    // Load PeerJS first so the status update is async — never a synchronous
-    // setState inside the auto-connect effect.
-    const { default: PeerCtor } = await import("peerjs")
-    setStatus("connecting")
-    const peer = new PeerCtor()
+  const log = useCallback(
+    (message: string) =>
+      setLogs((prev) =>
+        [...prev, `${new Date().toLocaleTimeString()}  ${message}`].slice(-60),
+      ),
+    [],
+  )
 
-    peer.on("open", () => {
-      const conn = peer.connect(peerIdForCode(target), { reliable: true })
-      connRef.current = conn
-      conn.on("open", () => setStatus("connected"))
-      conn.on("close", () => setStatus("idle"))
-      conn.on("error", () => setStatus("error"))
-    })
-    peer.on("error", () => setStatus("error"))
-  }, [])
+  const connect = useCallback(
+    (raw: string) => {
+      const room = raw.trim().toUpperCase()
+      if (room.length !== CODE_LENGTH) return
+      if (!PARTYKIT_HOST) {
+        setDetail("relay not configured")
+        setStatus("error")
+        return
+      }
+      socketRef.current?.close()
+      setStatus("connecting")
+      setDetail(null)
+      log(`joining room ${room}`)
 
-  // Auto-connect when arriving from the TV's QR code (/remote#CODE). The input
-  // is only for manual entry, so we connect directly rather than seeding state.
+      const socket = new PartySocket({ host: PARTYKIT_HOST, room })
+      socketRef.current = socket
+
+      socket.addEventListener("open", () => log("relay connected"))
+      socket.addEventListener("message", (event) => {
+        const data = parseMessage(event.data)
+        if (isPresenceMessage(data)) {
+          log(`presence: ${data.count}`)
+          // Connected only once the TV is also in the room (>= 2 devices).
+          setStatus(data.count >= 2 ? "connected" : "connecting")
+        }
+      })
+      socket.addEventListener("close", () => {
+        log("relay closed")
+        setStatus("idle")
+      })
+      socket.addEventListener("error", () => {
+        log("relay error")
+        setDetail("relay")
+        setStatus("error")
+      })
+    },
+    [log],
+  )
+
+  // Auto-connect (and show the code in the input) when arriving from the TV's
+  // QR code (/remote#CODE). A one-time URL read, not a render cascade.
   useEffect(() => {
     const fromHash = window.location.hash.replace(/^#/, "").toUpperCase()
-    // Connecting opens an external WebRTC peer; its status updates are async.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (fromHash.length === CODE_LENGTH) connect(fromHash)
+    if (fromHash.length !== CODE_LENGTH) return
+    /* eslint-disable react-hooks/set-state-in-effect */
+    setCode(fromHash)
+    connect(fromHash)
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, [connect])
 
+  // Close the socket when leaving the remote page.
+  useEffect(() => () => socketRef.current?.close(), [])
+
   const press = (action: RemoteAction) => {
-    const conn = connRef.current
-    if (conn?.open) {
-      conn.send({ type: "press", action })
+    const socket = socketRef.current
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify({ type: "press", action }))
       if (navigator.vibrate) navigator.vibrate(8)
+    } else {
+      log(`press "${action}" ignored — not connected`)
     }
   }
 
   const connected = status === "connected"
 
   return (
-    <main className="flex min-h-dvh flex-col items-center justify-between gap-6 bg-tv-bg px-6 py-8 text-tv-text select-none">
+    <main className="flex h-dvh flex-col items-center gap-6 overflow-y-auto bg-tv-bg px-6 py-8 text-tv-text select-none">
       <header className="flex w-full max-w-sm flex-col items-center gap-3">
         <span className="text-2xl font-bold tracking-tight">
           smart
@@ -86,6 +140,9 @@ const RemotePage = () => {
         <div className="flex items-center gap-2 text-sm text-tv-muted">
           <span className={`h-2.5 w-2.5 rounded-full ${STATUS_DOT[status]}`} />
           {STATUS_LABEL[status]}
+          {status === "error" && detail ? (
+            <span className="text-red-400">({detail})</span>
+          ) : null}
         </div>
 
         {!connected && (
@@ -114,10 +171,36 @@ const RemotePage = () => {
 
       <DPad disabled={!connected} onPress={press} />
 
-      <p className="text-center text-xs text-tv-muted">
-        Keep this page open while you watch. Both devices must share the same
-        Wi-Fi.
-      </p>
+      <div className="flex w-full max-w-sm flex-col items-center gap-2">
+        <p className="text-center text-xs text-tv-muted">
+          Keep this page open while you watch. Both devices must share the same
+          Wi-Fi.
+        </p>
+        <div className="flex items-center gap-4">
+          <button
+            type="button"
+            onClick={() => setShowLogs((value) => !value)}
+            className="text-xs text-tv-muted underline underline-offset-2"
+          >
+            {showLogs ? "Hide logs" : "Show logs"}
+            {logs.length ? ` (${logs.length})` : ""}
+          </button>
+          {logs.length > 0 && (
+            <button
+              type="button"
+              onClick={copyLogs}
+              className="text-xs text-sky-400 underline underline-offset-2"
+            >
+              {copied ? "Copied!" : "Copy logs"}
+            </button>
+          )}
+        </div>
+        {showLogs && (
+          <pre className="w-full whitespace-pre-wrap rounded-xl bg-black/50 p-3 text-left text-[11px] leading-relaxed text-tv-muted">
+            {logs.length ? logs.join("\n") : "No events yet."}
+          </pre>
+        )}
+      </div>
     </main>
   )
 }

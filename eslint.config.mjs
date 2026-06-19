@@ -5,7 +5,7 @@ const config = [
   ...coreWebVitals,
   ...typescript,
   {
-    ignores: [".next/**", "node_modules/**", "public/sw.js"],
+    ignores: [".next/**", "node_modules/**", "public/sw.js", "party/**"],
   },
 ]
 

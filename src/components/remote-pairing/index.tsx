@@ -6,11 +6,19 @@ import QRCode from "qrcode"
 import { FiSmartphone, FiCheckCircle } from "react-icons/fi"
 import { pause, resume } from "@noriginmedia/norigin-spatial-navigation"
 
-import { useRemoteReceiver } from "@/hooks/use-remote-receiver"
 import { CODE_LENGTH } from "@/lib/remote"
 
-export const RemotePairing = ({ onClose }: { onClose: () => void }) => {
-  const { code, connected } = useRemoteReceiver(true)
+// Presentational only — the receiver peer lives in TvShell so it keeps running
+// (and the phone keeps controlling) after this modal is dismissed.
+export const RemotePairing = ({
+  code,
+  connected,
+  onClose,
+}: {
+  code: string | null
+  connected: boolean
+  onClose: () => void
+}) => {
   const [qr, setQr] = useState<string | null>(null)
 
   // Spatial nav is irrelevant here; suspend it so it doesn't fight the modal.
@@ -95,7 +103,7 @@ export const RemotePairing = ({ onClose }: { onClose: () => void }) => {
                 ))}
             </div>
             <p className="text-[1.7vh] text-tv-muted">
-              Both devices should be on the same Wi-Fi. Waiting for your phone…
+              Waiting for your phone…
             </p>
           </>
         )}

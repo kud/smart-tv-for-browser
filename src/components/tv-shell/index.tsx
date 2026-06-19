@@ -13,6 +13,8 @@ import { AnimatePresence } from "motion/react"
 import { usePersistedState } from "@/hooks/use-persisted-state"
 import { useIdle } from "@/hooks/use-idle"
 import { useTvKeys } from "@/hooks/use-tv-keys"
+import { useRemoteReceiver } from "@/hooks/use-remote-receiver"
+import { makeCode } from "@/lib/remote"
 import {
   services,
   serviceKeys,
@@ -99,6 +101,11 @@ export const TvShell = () => {
   const [showHelp, setShowHelp] = useState(false)
   const [showAbout, setShowAbout] = useState(false)
   const [showRemote, setShowRemote] = useState(false)
+  // A code is generated once the user opens the remote and kept for the session,
+  // so the receiver stays joined to the room — the phone keeps controlling the
+  // app after the pairing modal is closed.
+  const [remoteCode, setRemoteCode] = useState<string | null>(null)
+  const { connected: remoteConnected } = useRemoteReceiver(remoteCode)
 
   const closeSettings = useCallback(() => setShowSettings(false), [])
   const toggleSettings = useCallback(
@@ -372,7 +379,10 @@ export const TvShell = () => {
         onEditChannel={setEditingChannel}
         onShowHelp={() => setShowHelp(true)}
         onShowAbout={() => setShowAbout(true)}
-        onShowRemote={() => setShowRemote(true)}
+        onShowRemote={() => {
+          setRemoteCode((current) => current ?? makeCode())
+          setShowRemote(true)
+        }}
         onClose={closeSettings}
       />
 
@@ -397,7 +407,13 @@ export const TvShell = () => {
       </AnimatePresence>
 
       <AnimatePresence>
-        {showRemote && <RemotePairing onClose={() => setShowRemote(false)} />}
+        {showRemote && (
+          <RemotePairing
+            code={remoteCode}
+            connected={remoteConnected}
+            onClose={() => setShowRemote(false)}
+          />
+        )}
       </AnimatePresence>
 
       <AnimatePresence>
