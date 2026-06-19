@@ -1,21 +1,36 @@
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 
 import { Providers } from "./providers"
 import "./globals.css"
 
 export const metadata: Metadata = {
-  title: "SmartTV",
+  applicationName: "SmartTV",
+  title: "SmartTV for Browser",
   description:
-    "SmartTV - Elevate your viewing experience. Explore a world of endless entertainment, immersive visuals, and smart innovations. Dive into the future of television with SmartTV.",
+    "A smart-TV home screen for the browser. Launch your streaming services with a remote-style D-pad, accessible hotkeys, and a 10-foot interface.",
   keywords:
-    "SmartTV, Next-gen TV, 4K, UHD, Streaming, Intelligent Television, Entertainment, Immersive Experience, TV Apps",
+    "SmartTV, streaming, launcher, 10-foot UI, remote, D-pad, PWA, Netflix, Disney+, Prime Video",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    title: "SmartTV",
+    statusBarStyle: "black-translucent",
+  },
+  icons: {
+    icon: "/icon.svg",
+    apple: "/icon.svg",
+  },
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export const viewport: Viewport = {
+  themeColor: "#06060a",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+}
+
+const RootLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <html lang="en" className="dark">
       <body>
@@ -24,3 +39,5 @@ export default function RootLayout({
     </html>
   )
 }
+
+export default RootLayout

@@ -1,13 +1,57 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --color-tv-bg: #06060a;
+  --color-tv-surface: #14141a;
+  --color-tv-elevated: #1d1d26;
+  --color-tv-text: #f5f5f7;
+  --color-tv-muted: #9b9ba6;
+  --color-tv-accent: #f5f5f7;
+
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto,
+    Helvetica, Arial, sans-serif;
+
+  --ease-tv: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+:root {
+  /* TV-safe overscan margins (~5% of each edge) for the 10-foot UI. */
+  --tv-safe-x: 5vw;
+  --tv-safe-y: 5vh;
+
+  /* Focus ring shared by every focusable surface. */
+  --focus-ring: 0 0 0 0.32vh rgba(255, 255, 255, 0.95);
+  --focus-glow: 0 1.8vh 5vh -1.8vh rgba(0, 0, 0, 0.45);
+
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
 
 html,
 body {
   padding: 0;
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Oxygen, Ubuntu,
-    Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+  height: 100%;
+  overflow: hidden;
+  font-family: var(--font-sans);
+  background: var(--color-tv-bg);
+  color: var(--color-tv-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  /* Subtle ambient glow behind the whole interface. */
+  background:
+    radial-gradient(
+      120vw 120vh at 50% -20%,
+      rgba(40, 44, 64, 0.55),
+      transparent 60%
+    ),
+    var(--color-tv-bg);
 }
 
 a {
@@ -15,16 +59,30 @@ a {
   text-decoration: none;
 }
 
-* {
-  box-sizing: border-box;
+button {
+  font-family: inherit;
+  cursor: pointer;
 }
 
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
-  }
-  body {
-    color: white;
-    background: black;
+/* Hide the native focus outline — spatial navigation paints its own ring. */
+:focus {
+  outline: none;
+}
+
+/* Scrollable rows (slider layout) without a visible scrollbar. */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
   }
 }

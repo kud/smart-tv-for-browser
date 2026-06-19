@@ -70,5 +70,89 @@
     "logo": "/logo-peacock.svg",
     "link": "https://www.peacocktv.com/",
     "backgroundColor": "#ffffff"
+  },
+  "max": {
+    "name": "Max",
+    "logo": "",
+    "link": "https://www.max.com/",
+    "backgroundColor": "#002be7",
+    "textColor": "#ffffff"
+  },
+  "paramountplus": {
+    "name": "Paramount+",
+    "logo": "",
+    "link": "https://www.paramountplus.com/",
+    "backgroundColor": "#0064ff",
+    "textColor": "#ffffff"
+  },
+  "crunchyroll": {
+    "name": "Crunchyroll",
+    "logo": "",
+    "link": "https://www.crunchyroll.com/",
+    "backgroundColor": "#f47521",
+    "textColor": "#ffffff"
+  },
+  "twitch": {
+    "name": "Twitch",
+    "logo": "",
+    "link": "https://www.twitch.tv/",
+    "backgroundColor": "#9146ff",
+    "textColor": "#ffffff"
+  },
+  "spotify": {
+    "name": "Spotify",
+    "logo": "",
+    "link": "https://open.spotify.com/",
+    "backgroundColor": "#1db954",
+    "textColor": "#ffffff"
+  },
+  "plutotv": {
+    "name": "Pluto TV",
+    "logo": "",
+    "link": "https://pluto.tv/",
+    "backgroundColor": "#00115b",
+    "textColor": "#ffffff"
+  },
+  "tubi": {
+    "name": "Tubi",
+    "logo": "",
+    "link": "https://tubitv.com/",
+    "backgroundColor": "#7408ff",
+    "textColor": "#ffffff"
+  },
+  "canalplus": {
+    "name": "CANAL+",
+    "logo": "",
+    "link": "https://www.canalplus.com/",
+    "backgroundColor": "#000000",
+    "textColor": "#ffffff"
+  },
+  "mubi": {
+    "name": "MUBI",
+    "logo": "",
+    "link": "https://mubi.com/",
+    "backgroundColor": "#000000",
+    "textColor": "#ffffff"
+  },
+  "discoveryplus": {
+    "name": "discovery+",
+    "logo": "",
+    "link": "https://www.discoveryplus.com/",
+    "backgroundColor": "#2175ff",
+    "textColor": "#ffffff"
+  },
+  "dazn": {
+    "name": "DAZN",
+    "logo": "",
+    "link": "https://www.dazn.com/",
+    "backgroundColor": "#f8f800",
+    "textColor": "#000000"
+  },
+  "britbox": {
+    "name": "BritBox",
+    "logo": "",
+    "link": "https://www.britbox.com/",
+    "backgroundColor": "#162955",
+    "textColor": "#ffffff"
   }
 }
