@@ -28,10 +28,10 @@ export const Screensaver = ({
     <AnimatePresence>
       {visible && (
         <motion.div
-          className="fixed inset-0 z-40 flex items-center justify-center overflow-hidden bg-black"
+          className="fixed inset-0 z-40 flex items-center justify-center overflow-hidden bg-tv-bg"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
+          exit={{ opacity: 0, transition: { duration: 0.5, ease: "easeOut" } }}
           transition={{ duration: 1.2 }}
           aria-hidden
         >
@@ -45,7 +45,7 @@ export const Screensaver = ({
             transition={{ duration: 24, repeat: Infinity, ease: "easeInOut" }}
           />
           <motion.span
-            className="relative text-[16vh] font-thin tabular-nums tracking-tight text-white/90"
+            className="relative text-[17vh] font-semibold tabular-nums tracking-tighter text-white"
             initial={{ scale: 0.96, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.4, duration: 1 }}

@@ -73,35 +73,35 @@
   },
   "max": {
     "name": "Max",
-    "logo": "",
+    "logo": "/logo-max.svg",
     "link": "https://www.max.com/",
     "backgroundColor": "#002be7",
     "textColor": "#ffffff"
   },
   "paramountplus": {
     "name": "Paramount+",
-    "logo": "",
+    "logo": "/logo-paramountplus.svg",
     "link": "https://www.paramountplus.com/",
     "backgroundColor": "#0064ff",
     "textColor": "#ffffff"
   },
   "crunchyroll": {
     "name": "Crunchyroll",
-    "logo": "",
+    "logo": "/logo-crunchyroll.svg",
     "link": "https://www.crunchyroll.com/",
     "backgroundColor": "#f47521",
     "textColor": "#ffffff"
   },
   "twitch": {
     "name": "Twitch",
-    "logo": "",
+    "logo": "/logo-twitch.svg",
     "link": "https://www.twitch.tv/",
     "backgroundColor": "#9146ff",
     "textColor": "#ffffff"
   },
   "spotify": {
     "name": "Spotify",
-    "logo": "",
+    "logo": "/logo-spotify.svg",
     "link": "https://open.spotify.com/",
     "backgroundColor": "#1db954",
     "textColor": "#ffffff"
@@ -115,7 +115,7 @@
   },
   "tubi": {
     "name": "Tubi",
-    "logo": "",
+    "logo": "/logo-tubi.svg",
     "link": "https://tubitv.com/",
     "backgroundColor": "#7408ff",
     "textColor": "#ffffff"
@@ -129,7 +129,7 @@
   },
   "mubi": {
     "name": "MUBI",
-    "logo": "",
+    "logo": "/logo-mubi.svg",
     "link": "https://mubi.com/",
     "backgroundColor": "#000000",
     "textColor": "#ffffff"
@@ -143,7 +143,7 @@
   },
   "dazn": {
     "name": "DAZN",
-    "logo": "",
+    "logo": "/logo-dazn.svg",
     "link": "https://www.dazn.com/",
     "backgroundColor": "#f8f800",
     "textColor": "#000000"

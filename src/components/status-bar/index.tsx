@@ -1,10 +1,11 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { FiWifi, FiWifiOff } from "react-icons/fi"
 import { AnimatePresence, motion } from "motion/react"
 
 import { Wordmark } from "@/components/wordmark"
+import { useOutsideClick } from "@/hooks/use-outside-click"
 
 type ConnectionInfo = {
   effectiveType?: string
@@ -38,6 +39,11 @@ export const StatusBar = ({ hour12 }: { hour12: boolean }) => {
   const [pingMs, setPingMs] = useState<number | null>(null)
   const [showInfo, setShowInfo] = useState(false)
   const [showCalendar, setShowCalendar] = useState(false)
+  const infoRef = useRef<HTMLDivElement>(null)
+  const calendarRef = useRef<HTMLDivElement>(null)
+
+  useOutsideClick(infoRef, showInfo, () => setShowInfo(false))
+  useOutsideClick(calendarRef, showCalendar, () => setShowCalendar(false))
 
   useEffect(() => {
     const tick = () => setNow(new Date())
@@ -105,7 +111,7 @@ export const StatusBar = ({ hour12 }: { hour12: boolean }) => {
     <header className="flex items-center justify-between text-tv-muted">
       <Wordmark className="text-[2.6vh]" />
       <div className="flex items-center gap-[1.6vw]">
-        <div className="relative">
+        <div ref={infoRef} className="relative">
           <button
             type="button"
             aria-label="Network status"
@@ -167,7 +173,7 @@ export const StatusBar = ({ hour12 }: { hour12: boolean }) => {
           </AnimatePresence>
         </div>
 
-        <div className="relative">
+        <div ref={calendarRef} className="relative">
           <button
             type="button"
             aria-label="Calendar"
