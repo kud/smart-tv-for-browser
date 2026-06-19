@@ -11,23 +11,18 @@ import { AnimatePresence, motion } from "motion/react"
 import {
   FiX,
   FiExternalLink,
-  FiEdit2,
   FiPlus,
   FiHelpCircle,
   FiInfo,
+  FiRotateCcw,
+  FiArrowDown,
 } from "react-icons/fi"
 import clsx from "clsx"
 
-import {
-  services,
-  serviceKeys,
-  type ServiceSelection,
-  type CustomChannel,
-  type SortMode,
-} from "@/lib/services"
+import type { CustomChannel } from "@/lib/services"
 import type { TileSize, TileShape } from "@/components/app-tile"
-import type { LayoutMode, DisplayChannel } from "@/components/app-grid"
-import { ChannelOrderList } from "@/components/channel-order"
+import type { LayoutMode } from "@/components/app-grid"
+import { ChannelList, type ManagedChannel } from "@/components/channel-order"
 
 const SHAPE_LABELS: Record<TileShape, string> = {
   rounded: "Rounded",
@@ -280,37 +275,6 @@ const RemoteRow = ({
   )
 }
 
-const CustomChannelRow = ({
-  channel,
-  onEdit,
-}: {
-  channel: CustomChannel
-  onEdit: () => void
-}) => {
-  const { ref, focused } = useFocusableRow<HTMLButtonElement>({
-    onEnterPress: onEdit,
-    accessibilityLabel: `${channel.name}. Press to edit.`,
-  })
-
-  return (
-    <button
-      ref={ref}
-      type="button"
-      tabIndex={-1}
-      onClick={onEdit}
-      aria-label={`Edit ${channel.name}`}
-      className={clsx(
-        "flex w-full items-center justify-between rounded-[1.2vh] px-[1.4vw] py-[1.4vh] text-[2.1vh] transition-colors",
-        focused ? "bg-white/12 text-tv-text" : "text-tv-muted",
-      )}
-      style={{ boxShadow: focused ? "var(--focus-ring)" : "none" }}
-    >
-      <span className="truncate">{channel.name}</span>
-      <FiEdit2 className="ml-[1vw] shrink-0 text-[2.2vh]" />
-    </button>
-  )
-}
-
 const ActionRow = ({
   label,
   icon,
@@ -367,21 +331,19 @@ const AddChannelRow = ({ onAdd }: { onAdd: () => void }) => {
 }
 
 type SettingsPanelBodyProps = {
-  selection: ServiceSelection
   size: TileSize
   shape: TileShape
   layout: LayoutMode
   soundEnabled: boolean
   twelveHour: boolean
   snappyScroll: boolean
-  sortMode: SortMode
-  channels: DisplayChannel[]
-  customChannels: CustomChannel[]
+  channels: ManagedChannel[]
   onToggleService: (key: string) => void
   onSizeChange: (size: TileSize) => void
   onCycleShape: () => void
-  onCycleSort: () => void
   onReorderChannels: (ids: string[]) => void
+  onResetOrder: () => void
+  onSortAlpha: () => void
   onToggleLayout: () => void
   onToggleSnappyScroll: () => void
   onToggleSound: () => void
@@ -396,21 +358,19 @@ type SettingsPanelBodyProps = {
 // Only mounted while the panel is open, so the "SETTINGS" focusable is never
 // registered without a DOM node (which would warn and break spatial layout).
 const SettingsPanelBody = ({
-  selection,
   size,
   shape,
   layout,
   soundEnabled,
   twelveHour,
   snappyScroll,
-  sortMode,
   channels,
-  customChannels,
   onToggleService,
   onSizeChange,
   onCycleShape,
-  onCycleSort,
   onReorderChannels,
+  onResetOrder,
+  onSortAlpha,
   onToggleLayout,
   onToggleSnappyScroll,
   onToggleSound,
@@ -483,47 +443,27 @@ const SettingsPanelBody = ({
         />
 
         <p className="mt-[2vh] mb-[0.5vh] px-[1.4vw] text-[1.7vh] font-semibold uppercase tracking-wider text-tv-text/80">
-          Channel order
+          Channels
         </p>
-        <CycleRow
-          label="Sort"
-          value={sortMode === "alpha" ? "A–Z" : "Custom"}
-          onCycle={onCycleSort}
+        <p className="px-[1.4vw] text-[1.5vh] text-tv-muted">
+          Drag to reorder · toggle to show or hide · or:
+        </p>
+        <ActionRow
+          label="Default order"
+          icon={<FiRotateCcw />}
+          onActivate={onResetOrder}
         />
-        {sortMode === "custom" && (
-          <>
-            <p className="px-[1.4vw] text-[1.5vh] text-tv-muted">
-              Drag to reorder
-            </p>
-            <ChannelOrderList
-              channels={channels}
-              onReorder={onReorderChannels}
-            />
-          </>
-        )}
-
-        <p className="mt-[2vh] mb-[0.5vh] px-[1.4vw] text-[1.7vh] font-semibold uppercase tracking-wider text-tv-text/80">
-          Apps
-        </p>
-        {serviceKeys.map((key) => (
-          <ServiceToggleRow
-            key={key}
-            label={services[key].name}
-            enabled={Boolean(selection[key])}
-            onToggle={() => onToggleService(key)}
-          />
-        ))}
-
-        <p className="mt-[2vh] mb-[0.5vh] px-[1.4vw] text-[1.7vh] font-semibold uppercase tracking-wider text-tv-text/80">
-          Your channels
-        </p>
-        {customChannels.map((channel) => (
-          <CustomChannelRow
-            key={channel.id}
-            channel={channel}
-            onEdit={() => onEditChannel(channel)}
-          />
-        ))}
+        <ActionRow
+          label="Sort A–Z"
+          icon={<FiArrowDown />}
+          onActivate={onSortAlpha}
+        />
+        <ChannelList
+          channels={channels}
+          onReorder={onReorderChannels}
+          onToggleService={onToggleService}
+          onEditChannel={onEditChannel}
+        />
         <AddChannelRow onAdd={onAddChannel} />
 
         <p className="mt-[2vh] mb-[0.5vh] px-[1.4vw] text-[1.7vh] font-semibold uppercase tracking-wider text-tv-text/80">
