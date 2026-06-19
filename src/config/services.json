@@ -9,7 +9,9 @@
     "name": "Prime Video",
     "logo": "/logo-primevideo.svg",
     "link": "https://www.primevideo.com/",
-    "backgroundColor": "#fff"
+    "icon": "/icon-primeVideo.png",
+    "backgroundColor": "#fff",
+    "splashColor": "#0578FF"
   },
   "plex": {
     "name": "Plex",
@@ -45,7 +47,9 @@
     "name": "YouTube",
     "logo": "/logo-youtube.svg",
     "link": "https://www.youtube.com/",
-    "backgroundColor": "#f7f7f7"
+    "icon": "/icon-youtube.png",
+    "backgroundColor": "#f7f7f7",
+    "splashColor": "#FFFFFF"
   },
   "hulu": {
     "name": "Hulu",
@@ -99,19 +103,14 @@
     "backgroundColor": "#9146ff",
     "textColor": "#ffffff"
   },
-  "spotify": {
-    "name": "Spotify",
-    "logo": "/logo-spotify.svg",
-    "link": "https://open.spotify.com/",
-    "backgroundColor": "#1db954",
-    "textColor": "#ffffff"
-  },
   "plutotv": {
     "name": "Pluto TV",
     "logo": "",
     "link": "https://pluto.tv/",
     "backgroundColor": "#00115b",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "icon": "/icon-plutotv.png",
+    "splashColor": "#FFF200"
   },
   "tubi": {
     "name": "Tubi",
@@ -125,7 +124,9 @@
     "logo": "",
     "link": "https://www.canalplus.com/",
     "backgroundColor": "#000000",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "icon": "/icon-canalplus.png",
+    "splashColor": "#1c1d22"
   },
   "mubi": {
     "name": "MUBI",
@@ -139,7 +140,9 @@
     "logo": "",
     "link": "https://www.discoveryplus.com/",
     "backgroundColor": "#2175ff",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "icon": "/icon-discoveryplus.png",
+    "splashColor": "#0c1f5e"
   },
   "dazn": {
     "name": "DAZN",
@@ -153,6 +156,8 @@
     "logo": "",
     "link": "https://www.britbox.com/",
     "backgroundColor": "#162955",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "icon": "/icon-britbox.png",
+    "splashColor": "#00182B"
   }
 }

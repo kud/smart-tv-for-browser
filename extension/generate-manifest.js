@@ -28,16 +28,29 @@ const matches = [
 // web_accessible_resources, no getURL, no Firefox reload quirks.
 rmSync(join(here, "logos"), { recursive: true, force: true })
 
-const toDataUri = (logoPath) => {
-  const svg = readFileSync(join(publicDir, logoPath.replace(/^\//, "")))
-  return `data:image/svg+xml;base64,${svg.toString("base64")}`
+const MIME = {
+  ".svg": "image/svg+xml",
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
 }
 
+const toDataUri = (assetPath) => {
+  const clean = assetPath.replace(/^\//, "")
+  const mime =
+    MIME[clean.slice(clean.lastIndexOf("."))] ?? "application/octet-stream"
+  const data = readFileSync(join(publicDir, clean))
+  return `data:${mime};base64,${data.toString("base64")}`
+}
+
+// Carry `icon` and `logo` separately so the launcher can render them exactly
+// like the website: full-bleed for the app icon, contained for the wordmark.
 const channels = Object.values(services).map((service) => ({
   name: service.name,
   link: service.link,
   backgroundColor: service.backgroundColor,
   textColor: service.textColor ?? null,
+  icon: service.icon ? toDataUri(service.icon) : null,
   logo: service.logo ? toDataUri(service.logo) : null,
 }))
 

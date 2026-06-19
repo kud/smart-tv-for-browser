@@ -76,6 +76,10 @@ export const TvShell = () => {
     false,
   )
   const [layout, setLayout] = usePersistedState<LayoutMode>("layout", "grid")
+  const [snappyScroll, setSnappyScroll] = usePersistedState<boolean>(
+    "snappyScroll",
+    true,
+  )
   const [customChannels, setCustomChannels] = usePersistedState<
     CustomChannel[]
   >("customChannels", [])
@@ -140,6 +144,11 @@ export const TvShell = () => {
   const toggleLayout = useCallback(
     () => setLayout((value) => (value === "grid" ? "slider" : "grid")),
     [setLayout],
+  )
+
+  const toggleSnappyScroll = useCallback(
+    () => setSnappyScroll((value) => !value),
+    [setSnappyScroll],
   )
 
   const cycleShape = useCallback(
@@ -277,6 +286,7 @@ export const TvShell = () => {
               size={size}
               shape={shape}
               layout={layout}
+              snappyScroll={snappyScroll}
               active={!showSettings && !idle}
               onLaunch={launch}
             />
@@ -292,11 +302,13 @@ export const TvShell = () => {
         layout={layout}
         soundEnabled={soundEnabled}
         twelveHour={twelveHour}
+        snappyScroll={snappyScroll}
         customChannels={customChannels}
         onToggleService={toggleService}
         onSizeChange={setSize}
         onCycleShape={cycleShape}
         onToggleLayout={toggleLayout}
+        onToggleSnappyScroll={toggleSnappyScroll}
         onToggleSound={toggleSound}
         onToggleClock={toggleClock}
         onAddChannel={() => setShowAddChannel(true)}

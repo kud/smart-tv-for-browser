@@ -5,6 +5,12 @@ export type Service = {
   logo: string
   link: string
   backgroundColor: string
+  /** Full-bleed official app icon (the real smart-TV launcher art). Preferred
+   * over `logo` and rendered edge-to-edge. */
+  icon?: string
+  /** Background colour of the app icon — used as the launch-splash background so
+   * the icon sits seamlessly (no visible square). Falls back to backgroundColor. */
+  splashColor?: string
   /** Used for the text wordmark fallback when `logo` is empty. */
   textColor?: string
 }
