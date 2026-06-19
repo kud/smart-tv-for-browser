@@ -1,62 +1,89 @@
-# SmartTV for Browser
+# smartTV for Browser
 
-Welcome to SmartTV for Browser – an immersive, intelligent, and intuitive interface for watching television right from your computer. Powered by [Next.js](https://nextjs.org/), this project provides users with a seamless homepage experience when they aim to explore the world of television on their computers.
+A **smart-TV home screen that runs in your browser**. It behaves like a real
+TV: an animated power-on boot, a 10-foot interface you drive with a remote-style
+**D-pad**, glassy app tiles that glow and scale on focus, an idle screensaver,
+and an installable **PWA** so you can run it full-screen on any device.
 
-## 📺 For Users
+## 📺 Using smartTV
 
-### Navigating SmartTV for Browser
+It's built around remote-control navigation — no mouse required.
 
-This interface is designed with simplicity and usability at its core. When on the SmartTV homepage:
+| Action        | Keys                 | On-screen remote |
+| ------------- | -------------------- | ---------------- |
+| Move focus    | Arrow keys (← ↑ → ↓) | D-pad            |
+| Open the app  | `Enter`              | **OK**           |
+| Back / close  | `Esc` or `Backspace` | **Back**         |
+| Open settings | `m` or the ⚙ button  | **Menu**         |
 
-1. **Accessing the Sidebar**:
-   To view the sidebar with all available channels, simply press the combination of `x + c + v` keys simultaneously.
+- **Opening an app** plays a launch splash, then hands off to the channel's
+  website directly — like a real TV OS launching an app full-screen. To get
+  _back_ to smartTV from any channel, install the **companion extension** (see
+  [`extension/`](extension/)), which adds a Home button + an `Alt+Shift+H`
+  Home hotkey to every channel site.
+- **Settings** (⚙ bottom-left, `Menu`, or the remote) lets you show/hide each
+  app and change the tile size. Choices are saved to `localStorage` and restored
+  on your next visit.
+- **On-screen remote** (bottom-right) mirrors every hotkey for mouse/touch use.
+- **Screensaver**: after ~45s idle, an ambient clock fades in; any key dismisses it.
+- **Install as an app**: use your browser's _Install_ / _Add to Home Screen_ to
+  run smartTV full-screen, offline-capable, like a native TV launcher.
 
-2. **Customizing Channels**:
-   Once the sidebar is displayed, you'll have the freedom to add or remove any channels to personalize your viewing experience. Click on a channel to toggle its presence on your homepage.
+## 🧑‍💻 Development
 
-3. **Viewing**:
-   Navigate through the displayed channels on the homepage and click on your desired channel to start viewing.
+```bash
+npm install
+npm run dev          # http://localhost:3000
+```
 
-### Additional Features
+Other scripts:
 
-Keep an eye out for continuous updates and new features that aim to enhance your viewing experience!
+```bash
+npm run build        # production build
+npm run start        # serve the production build
+npm run lint         # ESLint
+npm run typecheck    # tsc --noEmit
+```
 
-## 👨‍💻 For Developers
+### Adding or editing apps
 
-### Getting Started
+Apps live in [`src/config/services.json`](src/config/services.json). Each entry:
 
-1. **Install dependencies**:
+```json
+"netflix": {
+  "name": "Netflix",
+  "logo": "/logo-netflix.svg",
+  "link": "https://www.netflix.com",
+  "backgroundColor": "#0b0b0b"
+}
+```
 
-   ```bash
-   npm install
-   # or
-   yarn install
-   ```
+Drop the logo SVG in `public/` and reference it via `logo`. If you omit `logo`
+(set it to `""`), the tile renders a styled **text wordmark** of `name` instead —
+add an optional `textColor` for contrast on light backgrounds.
 
-2. **Run the development server**:
+## 🏗️ Architecture
 
-   ```bash
-   npm run dev
-   # or
-   yarn dev
-   ```
+- **Next.js 16** (App Router, Turbopack) · **React 19** · **TypeScript**
+- **Tailwind CSS 4** (CSS-first config + design tokens in `globals.css`)
+- **Motion** (Framer Motion) for the boot, focus springs, splash and screensaver
+- **@noriginmedia/norigin-spatial-navigation** for geometry-based D-pad focus
+- **PWA**: native `app/manifest.ts` + a hand-authored service worker
+  (`public/sw.js`) caching the app shell — no build-tool coupling
 
-3. **Local Development**:
-   Open [http://localhost:3000](http://localhost:3000) in your browser to see the result. As you explore and make modifications, the platform offers hot-reloading, allowing you to see real-time changes.
+```
+src/
+├─ app/            layout, page, providers (spatial nav + SW), manifest, globals
+├─ components/     tv-shell, boot-sequence, status-bar, app-grid, app-tile,
+│                  settings-panel, on-screen-remote, screensaver, launch-splash,
+│                  wordmark
+├─ hooks/          use-persisted-state, use-idle, use-tv-keys
+├─ lib/            services (typed config helpers)
+└─ config/         services.json
+```
 
-4. **Editing & Customization**:
-   The primary entry point is `pages/index.js`. The architecture is modular and extensible.
+## ♿ Accessibility
 
-5. **API Routes**:
-   For backend logic, the project offers API route support. Sample endpoint: [http://localhost:3000/api/hello](http://localhost:3000/api/hello). Check `pages/api/hello.js` for logic.
-
-### Resources & Documentation
-
-- [Next.js Documentation](https://nextjs.org/docs): Comprehensive guide on Next.js features and its API.
-- [Learn Next.js](https://nextjs.org/learn): An interactive tutorial on Next.js.
-
-For contributions, visit [the Next.js GitHub repository](https://github.com/vercel/next.js/). Feedback and contributions are highly valued!
-
-### Deployment
-
-Deploy the SmartTV for Browser experience using the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme). Refer to the [Next.js deployment documentation](https://nextjs.org/docs/deployment) for detailed steps.
+Tiles and controls are real focusable elements with `aria-label`s; the spatial
+cursor mirrors onto real DOM focus (screen-reader friendly), and all animation
+honours `prefers-reduced-motion`.

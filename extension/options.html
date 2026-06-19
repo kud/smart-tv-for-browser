@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>smartTV Home — Settings</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 32px;
+        font:
+          15px system-ui,
+          -apple-system,
+          sans-serif;
+        background: #06060a;
+        color: #f5f5f7;
+      }
+      h1 {
+        font-size: 20px;
+        margin: 0 0 4px;
+      }
+      p {
+        color: #9b9ba6;
+        margin: 0 0 20px;
+      }
+      label {
+        display: block;
+        margin-bottom: 8px;
+        color: #9b9ba6;
+      }
+      input {
+        width: 100%;
+        max-width: 420px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid #2a2a33;
+        background: #14141a;
+        color: #f5f5f7;
+        font: inherit;
+      }
+      button {
+        margin-top: 16px;
+        padding: 10px 20px;
+        border: 0;
+        border-radius: 999px;
+        background: #2563eb;
+        color: #fff;
+        font: 600 15px system-ui;
+        cursor: pointer;
+      }
+      #status {
+        margin-left: 12px;
+        color: #34d399;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>smartTV Home</h1>
+    <p>Where should the Home button take you?</p>
+    <label for="homeUrl">smartTV URL</label>
+    <input
+      id="homeUrl"
+      type="url"
+      placeholder="http://localhost:3000/"
+      autocomplete="off"
+    />
+    <div>
+      <button id="save">Save</button>
+      <span id="status"></span>
+    </div>
+    <script src="options.js"></script>
+  </body>
+</html>
