@@ -28,9 +28,11 @@ const onKey = (event) => {
 
 const tilesHtml = channels
   .map((channel, index) => {
-    const inner = channel.logo
-      ? `<img src="${channel.logo}" alt="${channel.name}">`
-      : `<span>${channel.name}</span>`
+    const inner = channel.icon
+      ? `<img class="full" src="${channel.icon}" alt="${channel.name}">`
+      : channel.logo
+        ? `<img src="${channel.logo}" alt="${channel.name}">`
+        : `<span>${channel.name}</span>`
     return `<a class="tile" href="${channel.link}" aria-label="${channel.name}"
       style="--i:${index};background:${channel.backgroundColor};color:${channel.textColor || "#fff"}">${inner}</a>`
   })
@@ -77,6 +79,7 @@ const open = () => {
       .label { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: #9b9ba6; margin: 4px 0 12px; }
       .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px; }
       .tile {
+        position: relative; overflow: hidden;
         display: flex; align-items: center; justify-content: center; text-align: center;
         aspect-ratio: 1; border-radius: 14px; text-decoration: none; font-weight: 700;
         padding: 8px; font-size: 15px; outline: 3px solid transparent;
@@ -84,6 +87,9 @@ const open = () => {
         animation: st-tile .32s ease both; animation-delay: calc(var(--i) * 16ms);
       }
       .tile img { width: 62%; height: 62%; object-fit: contain; pointer-events: none; }
+      .tile img.full {
+        position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+      }
       .tile:hover, .tile:focus-visible { transform: scale(1.06); outline-color: #fff; }
       @media (prefers-reduced-motion: reduce) {
         .backdrop, .panel, .tile { animation: none; }

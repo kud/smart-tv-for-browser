@@ -68,7 +68,7 @@ export const AppTile = ({
         event.preventDefault()
         onLaunch(service)
       }}
-      className="relative flex shrink-0 items-center justify-center overflow-hidden will-change-transform"
+      className="relative flex shrink-0 select-none items-center justify-center overflow-hidden scroll-my-[7vh] will-change-transform"
       style={{
         width: dimension,
         height: dimension,
@@ -80,7 +80,16 @@ export const AppTile = ({
       animate={{ scale: focused ? 1.12 : 1 }}
       transition={{ type: "spring", stiffness: 420, damping: 26 }}
     >
-      {service.logo ? (
+      {service.icon ? (
+        // Official app icon: full-bleed art clipped by the tile's radius — the
+        // real smart-TV launcher look.
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={service.icon}
+          alt=""
+          className="pointer-events-none absolute inset-0 h-full w-full object-cover"
+        />
+      ) : service.logo ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={service.logo}

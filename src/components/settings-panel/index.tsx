@@ -371,11 +371,13 @@ type SettingsPanelBodyProps = {
   layout: LayoutMode
   soundEnabled: boolean
   twelveHour: boolean
+  snappyScroll: boolean
   customChannels: CustomChannel[]
   onToggleService: (key: string) => void
   onSizeChange: (size: TileSize) => void
   onCycleShape: () => void
   onToggleLayout: () => void
+  onToggleSnappyScroll: () => void
   onToggleSound: () => void
   onToggleClock: () => void
   onAddChannel: () => void
@@ -394,11 +396,13 @@ const SettingsPanelBody = ({
   layout,
   soundEnabled,
   twelveHour,
+  snappyScroll,
   customChannels,
   onToggleService,
   onSizeChange,
   onCycleShape,
   onToggleLayout,
+  onToggleSnappyScroll,
   onToggleSound,
   onToggleClock,
   onAddChannel,
@@ -431,7 +435,7 @@ const SettingsPanelBody = ({
         ref={ref}
         role="dialog"
         aria-label="Settings"
-        className="fixed left-0 top-0 z-30 flex h-full w-[34vw] min-w-[320px] flex-col gap-[1vh] overflow-y-auto bg-tv-surface/95 px-[2vw] py-[var(--tv-safe-y)] backdrop-blur-xl"
+        className="fixed left-0 top-0 z-30 flex h-full w-[34vw] min-w-[320px] flex-col gap-[1vh] overflow-y-auto scroll-py-[8vh] bg-tv-surface/95 px-[2vw] py-[var(--tv-safe-y)] backdrop-blur-xl"
         initial={{ x: "-100%" }}
         animate={{ x: 0 }}
         exit={{ x: "-100%" }}
@@ -461,6 +465,11 @@ const SettingsPanelBody = ({
           label="Navigation sounds"
           enabled={soundEnabled}
           onToggle={onToggleSound}
+        />
+        <ServiceToggleRow
+          label="Snappy scroll"
+          enabled={snappyScroll}
+          onToggle={onToggleSnappyScroll}
         />
 
         <p className="mt-[2vh] mb-[0.5vh] px-[1.4vw] text-[1.7vh] font-semibold uppercase tracking-wider text-tv-text/80">

@@ -14,13 +14,16 @@ const isLight = (hex: string) => {
 }
 
 export const LaunchSplash = ({ service }: { service: Service }) => {
-  const onLight = isLight(service.backgroundColor)
+  // For app-icon channels the splash background equals the icon's own
+  // background, so the icon blends in seamlessly (no floating square).
+  const bg = service.splashColor ?? service.backgroundColor
+  const onLight = isLight(bg)
   const fg = onLight ? "#0b0b0b" : "#ffffff"
 
   return (
     <motion.div
       className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-[5vh]"
-      style={{ backgroundColor: service.backgroundColor }}
+      style={{ backgroundColor: bg }}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -35,7 +38,16 @@ export const LaunchSplash = ({ service }: { service: Service }) => {
         transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
         className="flex items-center justify-center"
       >
-        {service.logo ? (
+        {service.icon ? (
+          // Matches the grid tile. Background equals the icon's own colour, so
+          // the icon reads as the bare logo art — no rounded square, no shadow.
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={service.icon}
+            alt=""
+            className="h-[40vh] w-[40vh] object-contain"
+          />
+        ) : service.logo ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={service.logo}

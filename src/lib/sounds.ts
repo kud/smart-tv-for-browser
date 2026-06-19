@@ -6,6 +6,10 @@ let context: AudioContext | null = null
 let enabled = true
 let lastNavAt = 0
 
+// Master volume multiplier applied to every blip's peak — tuned for an audible
+// but non-harsh level (the sub-octave adds ~45%, so keep headroom under ~1.0).
+const MASTER = 2.8
+
 export const setSoundEnabled = (value: boolean) => {
   enabled = value
 }
@@ -46,7 +50,7 @@ const blip = (
 
   const gain = audio.createGain()
   gain.gain.setValueAtTime(0, start)
-  gain.gain.linearRampToValueAtTime(peak, start + attack)
+  gain.gain.linearRampToValueAtTime(peak * MASTER, start + attack)
   gain.gain.exponentialRampToValueAtTime(0.0001, start + duration)
 
   const osc = audio.createOscillator()
