@@ -307,6 +307,39 @@ const ActionRow = ({
   )
 }
 
+// Compact button used for the grouped Default / A–Z order actions.
+const OrderButton = ({
+  label,
+  icon,
+  onActivate,
+}: {
+  label: string
+  icon: React.ReactNode
+  onActivate: () => void
+}) => {
+  const { ref, focused } = useFocusableRow<HTMLButtonElement>({
+    onEnterPress: onActivate,
+    accessibilityLabel: label,
+  })
+
+  return (
+    <button
+      ref={ref}
+      type="button"
+      tabIndex={-1}
+      onClick={onActivate}
+      className={clsx(
+        "flex flex-1 items-center justify-center gap-[0.5vw] rounded-[1.2vh] bg-white/5 px-[1vw] py-[1vh] text-[1.9vh] transition-colors hover:bg-white/10",
+        focused ? "bg-white/15 text-tv-text" : "text-tv-muted",
+      )}
+      style={{ boxShadow: focused ? "var(--focus-ring)" : "none" }}
+    >
+      <span className="text-[2.1vh]">{icon}</span>
+      {label}
+    </button>
+  )
+}
+
 const AddChannelRow = ({ onAdd }: { onAdd: () => void }) => {
   const { ref, focused } = useFocusableRow<HTMLButtonElement>({
     onEnterPress: onAdd,
@@ -446,18 +479,20 @@ const SettingsPanelBody = ({
           Channels
         </p>
         <p className="px-[1.4vw] text-[1.5vh] text-tv-muted">
-          Drag to reorder · toggle to show or hide · or:
+          Drag to reorder · toggle to show or hide
         </p>
-        <ActionRow
-          label="Default order"
-          icon={<FiRotateCcw />}
-          onActivate={onResetOrder}
-        />
-        <ActionRow
-          label="Sort A–Z"
-          icon={<FiArrowDown />}
-          onActivate={onSortAlpha}
-        />
+        <div className="flex gap-[0.8vw]">
+          <OrderButton
+            label="Default"
+            icon={<FiRotateCcw />}
+            onActivate={onResetOrder}
+          />
+          <OrderButton
+            label="A–Z"
+            icon={<FiArrowDown />}
+            onActivate={onSortAlpha}
+          />
+        </div>
         <ChannelList
           channels={channels}
           onReorder={onReorderChannels}
