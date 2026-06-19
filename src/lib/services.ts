@@ -18,9 +18,6 @@ export type Service = {
 export type ServiceMap = Record<string, Service>
 export type ServiceSelection = Record<string, boolean>
 
-// How the channel grid is ordered: a user-defined drag order, or alphabetical.
-export type SortMode = "custom" | "alpha"
-
 // A user-added channel: any name + URL, stored in localStorage.
 export type CustomChannel = {
   id: string
