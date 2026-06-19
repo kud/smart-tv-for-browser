@@ -5,8 +5,17 @@ import {
   FocusContext,
   useFocusable,
 } from "@noriginmedia/norigin-spatial-navigation"
+
+import { useFocusableRow } from "@/hooks/use-focusable-row"
 import { AnimatePresence, motion } from "motion/react"
-import { FiX, FiExternalLink, FiEdit2, FiPlus } from "react-icons/fi"
+import {
+  FiX,
+  FiExternalLink,
+  FiEdit2,
+  FiPlus,
+  FiHelpCircle,
+  FiInfo,
+} from "react-icons/fi"
 import clsx from "clsx"
 
 import {
@@ -15,8 +24,14 @@ import {
   type ServiceSelection,
   type CustomChannel,
 } from "@/lib/services"
-import type { TileSize } from "@/components/app-tile"
+import type { TileSize, TileShape } from "@/components/app-tile"
 import type { LayoutMode } from "@/components/app-grid"
+
+const SHAPE_LABELS: Record<TileShape, string> = {
+  rounded: "Rounded",
+  square: "Square",
+  circle: "Circle",
+}
 
 // Recommended phone-as-remote app (Bluetooth keyboard/mouse) until a
 // first-party smartTV remote exists.
@@ -24,7 +39,7 @@ const BLEK_ANDROID_URL =
   "https://play.google.com/store/apps/details?id=io.appground.blek&hl=en_GB"
 
 const CloseButton = ({ onClose }: { onClose: () => void }) => {
-  const { ref, focused } = useFocusable<object, HTMLButtonElement>({
+  const { ref, focused } = useFocusableRow<HTMLButtonElement>({
     onEnterPress: onClose,
     accessibilityLabel: "Close settings",
   })
@@ -62,7 +77,7 @@ const ServiceToggleRow = ({
   enabled,
   onToggle,
 }: ServiceToggleRowProps) => {
-  const { ref, focused } = useFocusable<object, HTMLButtonElement>({
+  const { ref, focused } = useFocusableRow<HTMLButtonElement>({
     onEnterPress: onToggle,
     accessibilityLabel: `${label}, ${enabled ? "shown" : "hidden"}`,
   })
@@ -99,29 +114,40 @@ const ServiceToggleRow = ({
   )
 }
 
+// The ordered ring the stepper walks: "Auto" first, then each fixed px size.
+// Left/right wrap around the ends so the control loops like the other cycles.
+const SIZE_VALUES: TileSize[] = [
+  "auto",
+  ...Array.from(
+    { length: (TILE_MAX - TILE_MIN) / TILE_STEP + 1 },
+    (_, i) => TILE_MIN + i * TILE_STEP,
+  ),
+]
+
 type SizeStepperRowProps = {
   size: TileSize
   onSizeChange: (size: TileSize) => void
 }
 
-// Stepping left below the minimum lands on "Auto" (responsive); right from Auto
-// jumps to the smallest fixed size.
 const SizeStepperRow = ({ size, onSizeChange }: SizeStepperRowProps) => {
   const isAuto = size === "auto"
-  const { ref, focused } = useFocusable<object, HTMLDivElement>({
+  const index = SIZE_VALUES.indexOf(size)
+  const step = (delta: number) =>
+    onSizeChange(
+      SIZE_VALUES[(index + delta + SIZE_VALUES.length) % SIZE_VALUES.length],
+    )
+
+  const { ref, focused } = useFocusableRow<HTMLDivElement>({
     accessibilityLabel: `Tile size ${
       isAuto ? "auto" : `${size} pixels`
     }. Use left and right to adjust.`,
     onArrowPress: (direction) => {
       if (direction === "left") {
-        if (!isAuto) {
-          const next = size - TILE_STEP
-          onSizeChange(next < TILE_MIN ? "auto" : next)
-        }
+        step(-1)
         return false
       }
       if (direction === "right") {
-        onSizeChange(isAuto ? TILE_MIN : Math.min(TILE_MAX, size + TILE_STEP))
+        step(1)
         return false
       }
       return true
@@ -171,7 +197,7 @@ const CycleRow = ({
   value: string
   onCycle: () => void
 }) => {
-  const { ref, focused } = useFocusable<object, HTMLDivElement>({
+  const { ref, focused } = useFocusableRow<HTMLDivElement>({
     accessibilityLabel: `${label} ${value}. Left, right or Enter to change.`,
     onEnterPress: onCycle,
     onArrowPress: (direction) => {
@@ -222,7 +248,7 @@ const RemoteRow = ({
   disabled?: boolean
 }) => {
   const open = () => href && window.open(href, "_blank", "noopener,noreferrer")
-  const { ref, focused } = useFocusable<object, HTMLButtonElement>({
+  const { ref, focused } = useFocusableRow<HTMLButtonElement>({
     focusable: !disabled,
     onEnterPress: open,
     accessibilityLabel: `${label}. ${sublabel}`,
@@ -259,7 +285,7 @@ const CustomChannelRow = ({
   channel: CustomChannel
   onEdit: () => void
 }) => {
-  const { ref, focused } = useFocusable<object, HTMLButtonElement>({
+  const { ref, focused } = useFocusableRow<HTMLButtonElement>({
     onEnterPress: onEdit,
     accessibilityLabel: `${channel.name}. Press to edit.`,
   })
@@ -283,8 +309,40 @@ const CustomChannelRow = ({
   )
 }
 
+const ActionRow = ({
+  label,
+  icon,
+  onActivate,
+}: {
+  label: string
+  icon: React.ReactNode
+  onActivate: () => void
+}) => {
+  const { ref, focused } = useFocusableRow<HTMLButtonElement>({
+    onEnterPress: onActivate,
+    accessibilityLabel: label,
+  })
+
+  return (
+    <button
+      ref={ref}
+      type="button"
+      tabIndex={-1}
+      onClick={onActivate}
+      className={clsx(
+        "flex w-full items-center gap-[0.8vw] rounded-[1.2vh] px-[1.4vw] py-[1.4vh] text-[2.1vh] transition-colors",
+        focused ? "bg-white/12 text-tv-text" : "text-tv-muted",
+      )}
+      style={{ boxShadow: focused ? "var(--focus-ring)" : "none" }}
+    >
+      <span className="text-[2.4vh]">{icon}</span>
+      {label}
+    </button>
+  )
+}
+
 const AddChannelRow = ({ onAdd }: { onAdd: () => void }) => {
-  const { ref, focused } = useFocusable<object, HTMLButtonElement>({
+  const { ref, focused } = useFocusableRow<HTMLButtonElement>({
     onEnterPress: onAdd,
     accessibilityLabel: "Add a custom channel",
   })
@@ -309,17 +367,21 @@ const AddChannelRow = ({ onAdd }: { onAdd: () => void }) => {
 type SettingsPanelBodyProps = {
   selection: ServiceSelection
   size: TileSize
+  shape: TileShape
   layout: LayoutMode
   soundEnabled: boolean
   twelveHour: boolean
   customChannels: CustomChannel[]
   onToggleService: (key: string) => void
   onSizeChange: (size: TileSize) => void
+  onCycleShape: () => void
   onToggleLayout: () => void
   onToggleSound: () => void
   onToggleClock: () => void
   onAddChannel: () => void
   onEditChannel: (channel: CustomChannel) => void
+  onShowHelp: () => void
+  onShowAbout: () => void
   onClose: () => void
 }
 
@@ -328,17 +390,21 @@ type SettingsPanelBodyProps = {
 const SettingsPanelBody = ({
   selection,
   size,
+  shape,
   layout,
   soundEnabled,
   twelveHour,
   customChannels,
   onToggleService,
   onSizeChange,
+  onCycleShape,
   onToggleLayout,
   onToggleSound,
   onToggleClock,
   onAddChannel,
   onEditChannel,
+  onShowHelp,
+  onShowAbout,
   onClose,
 }: SettingsPanelBodyProps) => {
   const { ref, focusKey, focusSelf } = useFocusable<object, HTMLDivElement>({
@@ -381,6 +447,11 @@ const SettingsPanelBody = ({
           onCycle={onToggleLayout}
         />
         <SizeStepperRow size={size} onSizeChange={onSizeChange} />
+        <CycleRow
+          label="Icon shape"
+          value={SHAPE_LABELS[shape]}
+          onCycle={onCycleShape}
+        />
         <CycleRow
           label="Clock"
           value={twelveHour ? "12-hour" : "24-hour"}
@@ -433,6 +504,20 @@ const SettingsPanelBody = ({
           Not affiliated with Blek — just what we use for now. A dedicated
           smartTV remote may arrive here one day.
         </p>
+
+        <p className="mt-[2vh] mb-[0.5vh] px-[1.4vw] text-[1.7vh] font-semibold uppercase tracking-wider text-tv-text/80">
+          About &amp; help
+        </p>
+        <ActionRow
+          label="Keyboard shortcuts"
+          icon={<FiHelpCircle />}
+          onActivate={onShowHelp}
+        />
+        <ActionRow
+          label="About smartTV"
+          icon={<FiInfo />}
+          onActivate={onShowAbout}
+        />
 
         <p className="mt-auto pt-[2vh] text-[1.7vh] text-tv-muted">
           Press <kbd>Back</kbd> or <kbd>Esc</kbd> to close

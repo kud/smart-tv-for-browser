@@ -5,12 +5,16 @@ import { useFocusable } from "@noriginmedia/norigin-spatial-navigation"
 import { motion } from "motion/react"
 
 import type { Service } from "@/lib/services"
+import type { LayoutMode } from "@/components/app-grid"
 
 export type TileSize = number | "auto"
+export type TileShape = "rounded" | "square" | "circle"
 
 type AppTileProps = {
   service: Service
   size: TileSize
+  shape: TileShape
+  layout: LayoutMode
   onLaunch: (service: Service) => void
 }
 
@@ -18,7 +22,20 @@ type AppTileProps = {
 const AUTO_DIMENSION = "clamp(120px, 13vw, 260px)"
 const AUTO_LABEL = "clamp(14px, 1.6vw, 28px)"
 
-export const AppTile = ({ service, size, onLaunch }: AppTileProps) => {
+// Drives the tile's corner radius; "rounded" matches the original Apple-TV look.
+const SHAPE_RADIUS: Record<TileShape, string> = {
+  rounded: "1.6vh",
+  square: "0.4vh",
+  circle: "50%",
+}
+
+export const AppTile = ({
+  service,
+  size,
+  shape,
+  layout,
+  onLaunch,
+}: AppTileProps) => {
   const { ref, focused } = useFocusable<object, HTMLAnchorElement>({
     onEnterPress: () => onLaunch(service),
     accessibilityLabel: `Open ${service.name}`,
@@ -27,16 +44,18 @@ export const AppTile = ({ service, size, onLaunch }: AppTileProps) => {
   const dimension = size === "auto" ? AUTO_DIMENSION : `${size}px`
   const labelSize = size === "auto" ? AUTO_LABEL : `${size * 0.15}px`
 
-  // Keep the focused tile in view — essential for the horizontal slider layout.
+  // Keep the focused tile in view. The slider centres horizontally; the grid
+  // scrolls on the block axis only, letting the container's padding clear the
+  // edge rows so first/last focus doesn't yank the scroll.
   useEffect(() => {
     if (focused) {
-      ref.current?.scrollIntoView({
-        block: "nearest",
-        inline: "center",
-        behavior: "smooth",
-      })
+      ref.current?.scrollIntoView(
+        layout === "slider"
+          ? { block: "nearest", inline: "center", behavior: "smooth" }
+          : { block: "nearest", behavior: "smooth" },
+      )
     }
-  }, [focused, ref])
+  }, [focused, layout, ref])
 
   return (
     <motion.a
@@ -49,10 +68,11 @@ export const AppTile = ({ service, size, onLaunch }: AppTileProps) => {
         event.preventDefault()
         onLaunch(service)
       }}
-      className="relative flex shrink-0 items-center justify-center overflow-hidden rounded-[1.6vh] will-change-transform"
+      className="relative flex shrink-0 items-center justify-center overflow-hidden will-change-transform"
       style={{
         width: dimension,
         height: dimension,
+        borderRadius: SHAPE_RADIUS[shape],
         zIndex: focused ? 10 : 1,
         backgroundColor: service.backgroundColor,
         boxShadow: focused ? "var(--focus-ring)" : "none",

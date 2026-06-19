@@ -35,12 +35,15 @@ import {
   type DisplayChannel,
   type LayoutMode,
 } from "@/components/app-grid"
-import type { TileSize } from "@/components/app-tile"
+import type { TileSize, TileShape } from "@/components/app-tile"
 import { SettingsPanel } from "@/components/settings-panel"
 import { OnScreenRemote } from "@/components/on-screen-remote"
 import { Screensaver } from "@/components/screensaver"
 import { LaunchSplash } from "@/components/launch-splash"
 import { AddChannelModal } from "@/components/add-channel-modal"
+import { WelcomeBack } from "@/components/welcome-back"
+import { KeyboardHelp } from "@/components/keyboard-help"
+import { AboutModal } from "@/components/about-modal"
 
 // Set by the companion extension's Home button so returning to the launcher
 // doesn't replay the full boot animation. Read via useSyncExternalStore so the
@@ -63,6 +66,7 @@ export const TvShell = () => {
     defaultSelection,
   )
   const [size, setSize] = usePersistedState<TileSize>("imageSize", "auto")
+  const [shape, setShape] = usePersistedState<TileShape>("iconShape", "rounded")
   const [soundEnabled, setSoundEnabled] = usePersistedState<boolean>(
     "soundEnabled",
     true,
@@ -75,12 +79,15 @@ export const TvShell = () => {
   const [customChannels, setCustomChannels] = usePersistedState<
     CustomChannel[]
   >("customChannels", [])
-  const [idle, resetIdle] = useIdle(45000)
+  const [welcomeBack, setWelcomeBack] = useState(false)
+  const [idle, resetIdle] = useIdle(45000, () => setWelcomeBack(true))
   const [launching, setLaunching] = useState<Service | null>(null)
   const [showAddChannel, setShowAddChannel] = useState(false)
   const [editingChannel, setEditingChannel] = useState<CustomChannel | null>(
     null,
   )
+  const [showHelp, setShowHelp] = useState(false)
+  const [showAbout, setShowAbout] = useState(false)
 
   const closeSettings = useCallback(() => setShowSettings(false), [])
   const toggleSettings = useCallback(
@@ -133,6 +140,18 @@ export const TvShell = () => {
   const toggleLayout = useCallback(
     () => setLayout((value) => (value === "grid" ? "slider" : "grid")),
     [setLayout],
+  )
+
+  const cycleShape = useCallback(
+    () =>
+      setShape((value) =>
+        value === "rounded"
+          ? "square"
+          : value === "square"
+            ? "circle"
+            : "rounded",
+      ),
+    [setShape],
   )
 
   const confirmAddChannel = useCallback(
@@ -223,10 +242,21 @@ export const TvShell = () => {
         resetIdle()
         return
       }
+      if (showHelp) {
+        setShowHelp(false)
+        return
+      }
+      if (showAbout) {
+        setShowAbout(false)
+        return
+      }
       if (showSettings) closeSettings()
     },
     onMenu: () => {
       if (!idle) toggleSettings()
+    },
+    onHelp: () => {
+      if (!idle) setShowHelp(true)
     },
   })
 
@@ -241,10 +271,11 @@ export const TvShell = () => {
       {booted && (
         <div className="flex h-full flex-col px-[var(--tv-safe-x)] py-[var(--tv-safe-y)]">
           <StatusBar hour12={twelveHour} />
-          <div className="flex flex-1 items-center justify-center py-[4vh]">
+          <div className="flex min-h-0 flex-1 items-center justify-center py-[4vh]">
             <AppGrid
               channels={displayChannels}
               size={size}
+              shape={shape}
               layout={layout}
               active={!showSettings && !idle}
               onLaunch={launch}
@@ -257,25 +288,42 @@ export const TvShell = () => {
         open={showSettings}
         selection={effectiveSelection}
         size={size}
+        shape={shape}
         layout={layout}
         soundEnabled={soundEnabled}
         twelveHour={twelveHour}
         customChannels={customChannels}
         onToggleService={toggleService}
         onSizeChange={setSize}
+        onCycleShape={cycleShape}
         onToggleLayout={toggleLayout}
         onToggleSound={toggleSound}
         onToggleClock={toggleClock}
         onAddChannel={() => setShowAddChannel(true)}
         onEditChannel={setEditingChannel}
+        onShowHelp={() => setShowHelp(true)}
+        onShowAbout={() => setShowAbout(true)}
         onClose={closeSettings}
       />
 
       <Screensaver visible={idle && booted} hour12={twelveHour} />
+
+      <AnimatePresence>
+        {welcomeBack && <WelcomeBack onDone={() => setWelcomeBack(false)} />}
+      </AnimatePresence>
+
       <OnScreenRemote />
 
       <AnimatePresence>
         {launching && <LaunchSplash service={launching} />}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showHelp && <KeyboardHelp onClose={() => setShowHelp(false)} />}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showAbout && <AboutModal onClose={() => setShowAbout(false)} />}
       </AnimatePresence>
 
       <AnimatePresence>
