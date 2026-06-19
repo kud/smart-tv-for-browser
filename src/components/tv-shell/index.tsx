@@ -45,6 +45,7 @@ import { AddChannelModal } from "@/components/add-channel-modal"
 import { WelcomeBack } from "@/components/welcome-back"
 import { KeyboardHelp } from "@/components/keyboard-help"
 import { AboutModal } from "@/components/about-modal"
+import { RemotePairing } from "@/components/remote-pairing"
 
 // Set by the companion extension's Home button so returning to the launcher
 // doesn't replay the full boot animation. Read via useSyncExternalStore so the
@@ -97,6 +98,7 @@ export const TvShell = () => {
   )
   const [showHelp, setShowHelp] = useState(false)
   const [showAbout, setShowAbout] = useState(false)
+  const [showRemote, setShowRemote] = useState(false)
 
   const closeSettings = useCallback(() => setShowSettings(false), [])
   const toggleSettings = useCallback(
@@ -308,6 +310,10 @@ export const TvShell = () => {
         setShowAbout(false)
         return
       }
+      if (showRemote) {
+        setShowRemote(false)
+        return
+      }
       if (showSettings) closeSettings()
     },
     onMenu: () => {
@@ -366,6 +372,7 @@ export const TvShell = () => {
         onEditChannel={setEditingChannel}
         onShowHelp={() => setShowHelp(true)}
         onShowAbout={() => setShowAbout(true)}
+        onShowRemote={() => setShowRemote(true)}
         onClose={closeSettings}
       />
 
@@ -387,6 +394,10 @@ export const TvShell = () => {
 
       <AnimatePresence>
         {showAbout && <AboutModal onClose={() => setShowAbout(false)} />}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showRemote && <RemotePairing onClose={() => setShowRemote(false)} />}
       </AnimatePresence>
 
       <AnimatePresence>

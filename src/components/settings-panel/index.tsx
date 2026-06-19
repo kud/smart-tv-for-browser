@@ -16,6 +16,7 @@ import {
   FiInfo,
   FiRotateCcw,
   FiArrowDown,
+  FiSmartphone,
 } from "react-icons/fi"
 import clsx from "clsx"
 
@@ -385,6 +386,7 @@ type SettingsPanelBodyProps = {
   onEditChannel: (channel: CustomChannel) => void
   onShowHelp: () => void
   onShowAbout: () => void
+  onShowRemote: () => void
   onClose: () => void
 }
 
@@ -412,6 +414,7 @@ const SettingsPanelBody = ({
   onEditChannel,
   onShowHelp,
   onShowAbout,
+  onShowRemote,
   onClose,
 }: SettingsPanelBodyProps) => {
   const { ref, focusKey, focusSelf } = useFocusable<object, HTMLDivElement>({
@@ -504,6 +507,11 @@ const SettingsPanelBody = ({
         <p className="mt-[2vh] mb-[0.5vh] px-[1.4vw] text-[1.7vh] font-semibold uppercase tracking-wider text-tv-text/80">
           Remote
         </p>
+        <ActionRow
+          label="Phone remote — pair over Wi-Fi"
+          icon={<FiSmartphone />}
+          onActivate={onShowRemote}
+        />
         <RemoteRow
           label="Android — Bluetooth Keyboard & Mouse"
           sublabel="Use your phone as a TV remote"
