@@ -21,6 +21,7 @@ import {
   type Service,
   type ServiceSelection,
   type CustomChannel,
+  type SortMode,
 } from "@/lib/services"
 import {
   setSoundEnabled as applySoundEnabled,
@@ -83,6 +84,14 @@ export const TvShell = () => {
   const [customChannels, setCustomChannels] = usePersistedState<
     CustomChannel[]
   >("customChannels", [])
+  const [sortMode, setSortMode] = usePersistedState<SortMode>(
+    "sortMode",
+    "custom",
+  )
+  const [channelOrder, setChannelOrder] = usePersistedState<string[]>(
+    "channelOrder",
+    [],
+  )
   const [welcomeBack, setWelcomeBack] = useState(false)
   const [idle, resetIdle] = useIdle(45000, () => setWelcomeBack(true))
   const [launching, setLaunching] = useState<Service | null>(null)
@@ -119,8 +128,21 @@ export const TvShell = () => {
         backgroundColor: channel.backgroundColor || CUSTOM_CHANNEL_BG,
       } satisfies Service,
     }))
-    return [...builtIns, ...customs]
-  }, [effectiveSelection, customChannels])
+    const base = [...builtIns, ...customs]
+
+    if (sortMode === "alpha") {
+      return [...base].sort((a, b) =>
+        a.service.name.localeCompare(b.service.name),
+      )
+    }
+    // Custom: order by saved position; unknown ids (newly added) fall to the
+    // end, and Array.sort's stability keeps their natural order.
+    const position = new Map(channelOrder.map((id, index) => [id, index]))
+    return [...base].sort(
+      (a, b) =>
+        (position.get(a.id) ?? Infinity) - (position.get(b.id) ?? Infinity),
+    )
+  }, [effectiveSelection, customChannels, sortMode, channelOrder])
 
   const toggleService = useCallback(
     (key: string) =>
@@ -149,6 +171,19 @@ export const TvShell = () => {
   const toggleSnappyScroll = useCallback(
     () => setSnappyScroll((value) => !value),
     [setSnappyScroll],
+  )
+
+  const cycleSort = useCallback(
+    () => setSortMode((value) => (value === "custom" ? "alpha" : "custom")),
+    [setSortMode],
+  )
+
+  const reorderChannels = useCallback(
+    (ids: string[]) => {
+      setChannelOrder(ids)
+      setSortMode("custom")
+    },
+    [setChannelOrder, setSortMode],
   )
 
   const cycleShape = useCallback(
@@ -303,10 +338,14 @@ export const TvShell = () => {
         soundEnabled={soundEnabled}
         twelveHour={twelveHour}
         snappyScroll={snappyScroll}
+        sortMode={sortMode}
+        channels={displayChannels}
         customChannels={customChannels}
         onToggleService={toggleService}
         onSizeChange={setSize}
         onCycleShape={cycleShape}
+        onCycleSort={cycleSort}
+        onReorderChannels={reorderChannels}
         onToggleLayout={toggleLayout}
         onToggleSnappyScroll={toggleSnappyScroll}
         onToggleSound={toggleSound}

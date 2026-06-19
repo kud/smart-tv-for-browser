@@ -23,9 +23,11 @@ import {
   serviceKeys,
   type ServiceSelection,
   type CustomChannel,
+  type SortMode,
 } from "@/lib/services"
 import type { TileSize, TileShape } from "@/components/app-tile"
-import type { LayoutMode } from "@/components/app-grid"
+import type { LayoutMode, DisplayChannel } from "@/components/app-grid"
+import { ChannelOrderList } from "@/components/channel-order"
 
 const SHAPE_LABELS: Record<TileShape, string> = {
   rounded: "Rounded",
@@ -372,10 +374,14 @@ type SettingsPanelBodyProps = {
   soundEnabled: boolean
   twelveHour: boolean
   snappyScroll: boolean
+  sortMode: SortMode
+  channels: DisplayChannel[]
   customChannels: CustomChannel[]
   onToggleService: (key: string) => void
   onSizeChange: (size: TileSize) => void
   onCycleShape: () => void
+  onCycleSort: () => void
+  onReorderChannels: (ids: string[]) => void
   onToggleLayout: () => void
   onToggleSnappyScroll: () => void
   onToggleSound: () => void
@@ -397,10 +403,14 @@ const SettingsPanelBody = ({
   soundEnabled,
   twelveHour,
   snappyScroll,
+  sortMode,
+  channels,
   customChannels,
   onToggleService,
   onSizeChange,
   onCycleShape,
+  onCycleSort,
+  onReorderChannels,
   onToggleLayout,
   onToggleSnappyScroll,
   onToggleSound,
@@ -471,6 +481,26 @@ const SettingsPanelBody = ({
           enabled={snappyScroll}
           onToggle={onToggleSnappyScroll}
         />
+
+        <p className="mt-[2vh] mb-[0.5vh] px-[1.4vw] text-[1.7vh] font-semibold uppercase tracking-wider text-tv-text/80">
+          Channel order
+        </p>
+        <CycleRow
+          label="Sort"
+          value={sortMode === "alpha" ? "A–Z" : "Custom"}
+          onCycle={onCycleSort}
+        />
+        {sortMode === "custom" && (
+          <>
+            <p className="px-[1.4vw] text-[1.5vh] text-tv-muted">
+              Drag to reorder
+            </p>
+            <ChannelOrderList
+              channels={channels}
+              onReorder={onReorderChannels}
+            />
+          </>
+        )}
 
         <p className="mt-[2vh] mb-[0.5vh] px-[1.4vw] text-[1.7vh] font-semibold uppercase tracking-wider text-tv-text/80">
           Apps
