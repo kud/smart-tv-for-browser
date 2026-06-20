@@ -4,7 +4,10 @@ const api = globalThis.browser ?? globalThis.chrome
 // extension storage, so the launcher overlay on channel sites shows the same
 // channels, in the same order, as the website. A content script shares the host
 // page's localStorage, which is why it can read these at all.
-const KEYS = ["services", "customChannels", "channelOrder"]
+// `remoteCode` is the active phone-remote pairing code — mirrored so the
+// background worker can join the same relay room and keep the phone in control
+// after the user launches a channel and leaves the app.
+const KEYS = ["services", "customChannels", "channelOrder", "remoteCode"]
 
 const read = (key) => {
   try {

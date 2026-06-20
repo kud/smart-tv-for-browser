@@ -83,7 +83,9 @@ const manifest = {
   version: "0.1.0",
   description:
     "Press Alt+Shift+H on any channel to open the smartTV launcher — jump home or switch channels, like a remote.",
-  permissions: ["storage", "tabs"],
+  // `alarms` keeps the background relay connection alive across MV3 service-
+  // worker evictions so the phone remote keeps working after leaving the app.
+  permissions: ["storage", "tabs", "alarms"],
   // Chrome MV3 uses `service_worker`; Firefox MV3 uses `scripts`. Declaring both
   // keeps one manifest working in both — each browser uses what it supports.
   background: {
