@@ -288,44 +288,30 @@ let cursorPlaced = false
 let cursorHideTimer = 0
 let hovered = null
 
-// A classic pointer arrow (tip at 0,0), built via the DOM rather than innerHTML
-// so it survives Trusted Types sites (e.g. YouTube) that throw on innerHTML.
-const SVG_NS = "http://www.w3.org/2000/svg"
-const buildCursorArrow = () => {
-  const svg = document.createElementNS(SVG_NS, "svg")
-  svg.setAttribute("width", "22")
-  svg.setAttribute("height", "22")
-  svg.setAttribute("viewBox", "0 0 20 20")
-  const path = document.createElementNS(SVG_NS, "path")
-  path.setAttribute(
-    "d",
-    "M0 0 L0 15.5 L4.2 11.8 L6.9 17.6 L9.4 16.4 L6.7 10.7 L12 10.6 Z",
-  )
-  path.setAttribute("fill", "#fff")
-  path.setAttribute("stroke", "#111")
-  path.setAttribute("stroke-width", "1.4")
-  path.setAttribute("stroke-linejoin", "round")
-  svg.appendChild(path)
-  return svg
-}
+// A flat round dot with a white ring — a plain styled div (no innerHTML) so it
+// survives Trusted Types sites (e.g. YouTube). Its hue shifts with position.
+const CURSOR_SIZE = 20
+const hueAt = (x, y) =>
+  Math.round(((x / window.innerWidth + y / window.innerHeight) / 2) * 360)
 
 const ensureCursor = () => {
   if (cursorEl) return cursorEl
   cursorEl = document.createElement("div")
   cursorEl.id = "smarttv-cursor"
-  cursorEl.appendChild(buildCursorArrow())
   Object.assign(cursorEl.style, {
     position: "fixed",
     left: "0px",
     top: "0px",
-    width: "22px",
-    height: "22px",
+    width: `${CURSOR_SIZE}px`,
+    height: `${CURSOR_SIZE}px`,
+    borderRadius: "50%",
+    background: "hsl(200 90% 55%)",
+    boxShadow: "0 0 0 2px rgba(255,255,255,.92), 0 3px 10px rgba(0,0,0,.5)",
     pointerEvents: "none",
     zIndex: "2147483647",
-    filter: "drop-shadow(0 1px 2px rgba(0,0,0,.6))",
     transition: "opacity .15s ease",
     opacity: "0",
-    willChange: "transform",
+    willChange: "transform, background",
   })
   ;(document.body || document.documentElement).appendChild(cursorEl)
   return cursorEl
@@ -370,7 +356,8 @@ const moveCursorBy = (dx, dy) => {
   }
   cursorX = Math.max(0, Math.min(window.innerWidth - 1, cursorX + dx))
   cursorY = Math.max(0, Math.min(window.innerHeight - 1, cursorY + dy))
-  el.style.transform = `translate(${cursorX}px, ${cursorY}px)`
+  el.style.transform = `translate(${cursorX - CURSOR_SIZE / 2}px, ${cursorY - CURSOR_SIZE / 2}px)`
+  el.style.background = `hsl(${hueAt(cursorX, cursorY)} 90% 55%)`
   showCursor()
 
   // Drive hover so dropdowns and hover states appear, like a real mouse.
@@ -546,6 +533,9 @@ api.runtime.onMessage.addListener((message) => {
     if (isEditable(el)) writeEditable(el, message.value)
   } else if (message?.type === "smarttv-submit") {
     const el = document.activeElement
-    if (isEditable(el)) pressKey("Enter")
+    if (isEditable(el)) {
+      pressKey("Enter")
+      if (el.form && el.form.requestSubmit) el.form.requestSubmit()
+    }
   }
 })

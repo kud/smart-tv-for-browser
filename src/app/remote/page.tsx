@@ -222,9 +222,9 @@ const RemotePage = () => {
   )
 }
 
-// The phone's keyboard for typing into a focused field on the TV. The text input
-// is autofocused (which opens the mobile keyboard on a real tap); every change
-// streams to the TV, and Go submits (Enter).
+// A fullscreen typing mode that takes over the remote (so it's not crammed above
+// the OS keyboard). The input sits at the top — where it stays visible once the
+// phone keyboard rises — autofocused; every change streams to the TV, Go submits.
 const Keyboard = ({
   text,
   onText,
@@ -236,32 +236,42 @@ const Keyboard = ({
   onSubmit: () => void
   onClose: () => void
 }) => (
-  <div className="fixed inset-x-0 bottom-0 z-40 flex items-center gap-2 border-t border-white/10 bg-tv-elevated p-4 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
-    <input
-      autoFocus
-      value={text}
-      onChange={(event) => onText(event.target.value)}
-      onKeyDown={(event) => {
-        if (event.key === "Enter") onSubmit()
-      }}
-      placeholder="Type for the TV…"
-      className="min-w-0 flex-1 rounded-xl border border-white/15 bg-black/40 px-4 py-3 text-base outline-none focus:border-sky-400"
-    />
-    <button
-      type="button"
-      onClick={onSubmit}
-      className="shrink-0 rounded-xl bg-sky-500 px-5 py-3 font-semibold text-white"
-    >
-      Go
-    </button>
-    <button
-      type="button"
-      onClick={onClose}
-      aria-label="Close keyboard"
-      className="shrink-0 rounded-xl bg-white/10 px-4 py-3 text-tv-muted"
-    >
-      <FiX />
-    </button>
+  <div className="fixed inset-0 z-50 flex flex-col gap-4 bg-tv-bg p-5">
+    <div className="flex items-center justify-between">
+      <span className="text-sm font-medium text-tv-muted">Type for the TV</span>
+      <button
+        type="button"
+        onClick={onClose}
+        aria-label="Close keyboard"
+        className="rounded-full bg-white/10 p-2 text-tv-muted"
+      >
+        <FiX className="text-lg" />
+      </button>
+    </div>
+
+    <div className="flex items-center gap-2">
+      <input
+        autoFocus
+        value={text}
+        onChange={(event) => onText(event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") onSubmit()
+        }}
+        placeholder="Start typing…"
+        className="min-w-0 flex-1 rounded-xl border border-white/15 bg-black/40 px-4 py-4 text-lg outline-none focus:border-sky-400"
+      />
+      <button
+        type="button"
+        onClick={onSubmit}
+        className="shrink-0 rounded-xl bg-sky-500 px-6 py-4 text-lg font-semibold text-white"
+      >
+        Go
+      </button>
+    </div>
+
+    <p className="text-xs text-tv-muted">
+      What you type appears on the TV. Tap Go (or Enter) to submit.
+    </p>
   </div>
 )
 

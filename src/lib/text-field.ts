@@ -49,6 +49,8 @@ export const submitEditable = (el: HTMLElement) => {
   const init: KeyboardEventInit = {
     key: "Enter",
     code: "Enter",
+    keyCode: 13,
+    which: 13,
     bubbles: true,
     cancelable: true,
   }
@@ -56,5 +58,9 @@ export const submitEditable = (el: HTMLElement) => {
   Object.defineProperty(down, "keyCode", { get: () => 13 })
   Object.defineProperty(down, "which", { get: () => 13 })
   el.dispatchEvent(down)
+  el.dispatchEvent(new KeyboardEvent("keypress", init))
   el.dispatchEvent(new KeyboardEvent("keyup", init))
+  // Fallback for plain forms that submit on Enter but don't handle keydown.
+  const form = (el as HTMLInputElement).form
+  if (form) form.requestSubmit?.()
 }
