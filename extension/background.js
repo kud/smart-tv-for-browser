@@ -45,6 +45,21 @@ const forwardAction = async (action) => {
   }
 }
 
+// Relative cursor movement from the phone's trackpad → the active tab's content
+// script, which moves an on-screen pointer and synthesises hover/click.
+const forwardMove = async (dx, dy) => {
+  try {
+    const [tab] = await api.tabs.query({
+      active: true,
+      lastFocusedWindow: true,
+    })
+    if (tab?.id)
+      await api.tabs.sendMessage(tab.id, { type: "smarttv-move", dx, dy })
+  } catch {
+    // Active tab has no content script.
+  }
+}
+
 const disconnect = () => {
   if (!socket) return
   try {
@@ -90,6 +105,12 @@ const connect = (code) => {
     }
     if (data?.type === "press" && typeof data.action === "string") {
       forwardAction(data.action)
+    } else if (
+      data?.type === "move" &&
+      typeof data.dx === "number" &&
+      typeof data.dy === "number"
+    ) {
+      forwardMove(data.dx, data.dy)
     }
   })
   ws.addEventListener("close", () => {

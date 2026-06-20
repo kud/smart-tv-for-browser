@@ -24,6 +24,21 @@ export type RemoteAction = RemoteKeyAction | "home"
 
 export type RemoteMessage = { type: "press"; action: RemoteAction }
 
+// Relative cursor movement from the phone's trackpad. The extension turns these
+// into a real on-screen pointer (move + hover + click) on sites we don't own.
+export type MoveMessage = { type: "move"; dx: number; dy: number }
+export const moveMessage = (dx: number, dy: number) =>
+  JSON.stringify({ type: "move", dx, dy })
+export const isMoveMessage = (value: unknown): value is MoveMessage => {
+  if (!value || typeof value !== "object") return false
+  const message = value as Record<string, unknown>
+  return (
+    message.type === "move" &&
+    typeof message.dx === "number" &&
+    typeof message.dy === "number"
+  )
+}
+
 // On connect, each side announces its role so presence can be counted per kind:
 // "app" = the website, "ext" = the extension's background worker, "phone" = the
 // remote. Reported per-role so each side can show exactly who else is present.
