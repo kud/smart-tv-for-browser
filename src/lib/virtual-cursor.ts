@@ -10,25 +10,11 @@ export type VirtualCursor = {
   destroy: () => void
 }
 
-const SVG_NS = "http://www.w3.org/2000/svg"
+const CURSOR_SIZE = 20
 
-const buildCursorArrow = (): SVGElement => {
-  const svg = document.createElementNS(SVG_NS, "svg")
-  svg.setAttribute("width", "22")
-  svg.setAttribute("height", "22")
-  svg.setAttribute("viewBox", "0 0 20 20")
-  const path = document.createElementNS(SVG_NS, "path")
-  path.setAttribute(
-    "d",
-    "M0 0 L0 15.5 L4.2 11.8 L6.9 17.6 L9.4 16.4 L6.7 10.7 L12 10.6 Z",
-  )
-  path.setAttribute("fill", "#fff")
-  path.setAttribute("stroke", "#111")
-  path.setAttribute("stroke-width", "1.4")
-  path.setAttribute("stroke-linejoin", "round")
-  svg.appendChild(path)
-  return svg
-}
+// Hue from screen position — the dot shifts through the rainbow as you move it.
+const hueAt = (x: number, y: number) =>
+  Math.round(((x / window.innerWidth + y / window.innerHeight) / 2) * 360)
 
 export const createVirtualCursor = (): VirtualCursor => {
   let x = 0
@@ -37,23 +23,24 @@ export const createVirtualCursor = (): VirtualCursor => {
   let hovered: Element | null = null
   let hideTimer = 0
 
-  // A classic pointer arrow (tip at 0,0), built via the DOM (not innerHTML) so
-  // it survives Trusted Types sites like YouTube that throw on innerHTML.
+  // A flat round dot with a white ring — built as a plain styled div (no
+  // innerHTML) so it survives Trusted Types sites like YouTube.
   const el = document.createElement("div")
   el.setAttribute("aria-hidden", "true")
-  el.appendChild(buildCursorArrow())
   Object.assign(el.style, {
     position: "fixed",
     left: "0px",
     top: "0px",
-    width: "22px",
-    height: "22px",
+    width: `${CURSOR_SIZE}px`,
+    height: `${CURSOR_SIZE}px`,
+    borderRadius: "50%",
+    background: "hsl(200 90% 55%)",
+    boxShadow: "0 0 0 2px rgba(255,255,255,.92), 0 3px 10px rgba(0,0,0,.5)",
     pointerEvents: "none",
     zIndex: "2147483647",
-    filter: "drop-shadow(0 1px 2px rgba(0,0,0,.6))",
     transition: "opacity .15s ease",
     opacity: "0",
-    willChange: "transform",
+    willChange: "transform, background",
   } satisfies Partial<CSSStyleDeclaration>)
   document.body.appendChild(el)
 
@@ -99,7 +86,8 @@ export const createVirtualCursor = (): VirtualCursor => {
     }
     x = Math.max(0, Math.min(window.innerWidth - 1, x + dx))
     y = Math.max(0, Math.min(window.innerHeight - 1, y + dy))
-    el.style.transform = `translate(${x}px, ${y}px)`
+    el.style.transform = `translate(${x - CURSOR_SIZE / 2}px, ${y - CURSOR_SIZE / 2}px)`
+    el.style.background = `hsl(${hueAt(x, y)} 90% 55%)`
     show()
 
     const over = document.elementFromPoint(x, y)
