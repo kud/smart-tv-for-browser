@@ -413,10 +413,47 @@ const handleAction = (action) => {
   }
 }
 
+// YouTube's leanback TV UI is built for a remote (arrow keys), so there the
+// trackpad becomes a D-pad: accumulate the stream of move deltas and emit an
+// arrow key each time it crosses a step, instead of moving a cursor.
+const isLeanback = () =>
+  location.hostname.endsWith("youtube.com") &&
+  location.pathname.startsWith("/tv")
+
+const SWIPE_STEP = 55
+let swipeAccX = 0
+let swipeAccY = 0
+let swipeResetTimer = 0
+
+const swipeToArrows = (dx, dy) => {
+  swipeAccX += dx
+  swipeAccY += dy
+  while (
+    Math.abs(swipeAccX) >= SWIPE_STEP ||
+    Math.abs(swipeAccY) >= SWIPE_STEP
+  ) {
+    if (Math.abs(swipeAccX) >= Math.abs(swipeAccY)) {
+      pressKey(swipeAccX > 0 ? "ArrowRight" : "ArrowLeft")
+      swipeAccX += swipeAccX > 0 ? -SWIPE_STEP : SWIPE_STEP
+    } else {
+      pressKey(swipeAccY > 0 ? "ArrowDown" : "ArrowUp")
+      swipeAccY += swipeAccY > 0 ? -SWIPE_STEP : SWIPE_STEP
+    }
+  }
+  // Drop leftover sub-step travel once the gesture pauses.
+  clearTimeout(swipeResetTimer)
+  swipeResetTimer = setTimeout(() => {
+    swipeAccX = 0
+    swipeAccY = 0
+  }, 250)
+}
+
 api.runtime.onMessage.addListener((message) => {
   if (message?.type === "smarttv-toggle") toggle()
   else if (message?.type === "smarttv-press" && message.action)
     handleAction(message.action)
-  else if (message?.type === "smarttv-move")
-    moveCursorBy(message.dx, message.dy)
+  else if (message?.type === "smarttv-move") {
+    if (isLeanback()) swipeToArrows(message.dx, message.dy)
+    else moveCursorBy(message.dx, message.dy)
+  }
 })

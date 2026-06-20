@@ -52,18 +52,47 @@
         margin-left: 12px;
         color: #34d399;
       }
+      .toggle {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        max-width: 460px;
+        margin-top: 28px;
+        color: #f5f5f7;
+      }
+      .toggle input {
+        width: auto;
+        margin-top: 3px;
+      }
+      .toggle .hint {
+        color: #9b9ba6;
+        margin: 4px 0 0;
+        font-size: 13px;
+      }
     </style>
   </head>
   <body>
-    <h1>smartTV Home</h1>
+    <h1>smartTV</h1>
     <p>Where should the Home button take you?</p>
     <label for="homeUrl">smartTV URL</label>
     <input
       id="homeUrl"
       type="url"
-      placeholder="http://localhost:3000/"
+      placeholder="https://smart-tv.kud.io/"
       autocomplete="off"
     />
+
+    <label class="toggle">
+      <input id="ytTvMode" type="checkbox" />
+      <span>
+        YouTube TV mode
+        <span class="hint"
+          >Open YouTube as its TV (leanback) interface, navigable with the
+          remote. Turn off for the normal desktop site.</span
+        >
+      </span>
+    </label>
+
     <div>
       <button id="save">Save</button>
       <span id="status"></span>
