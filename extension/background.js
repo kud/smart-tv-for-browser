@@ -31,6 +31,13 @@ const forwardAction = async (action) => {
     return
   }
 
+  // Open (toggle) the launcher overlay on the active tab — switch channels in
+  // place, without leaving the current site.
+  if (action === "channels") {
+    toggleLauncher()
+    return
+  }
+
   // Hand the action (not a key) to the content script: it both fires the key
   // event and advances native focus, so it can drive sites that ignore keys.
   try {

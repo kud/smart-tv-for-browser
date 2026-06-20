@@ -69,7 +69,8 @@ export const useRemoteReceiver = (code: string | null) => {
         return
       }
       if (isRemoteMessage(data)) {
-        if (data.action === "home") {
+        if (data.action === "home" || data.action === "channels") {
+          // On the smartTV app the channel grid *is* home, so both land there.
           window.dispatchEvent(new CustomEvent("smarttv-home"))
           return
         }

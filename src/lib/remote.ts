@@ -22,11 +22,12 @@ export const REMOTE_KEYS = {
   voldown: "ArrowDown",
 } as const
 
-// Actions that map directly to a keyboard key. "home" is handled specially (the
-// website returns to the launcher; the extension navigates the tab back to
-// smartTV) so it lives outside REMOTE_KEYS.
+// Actions that map directly to a keyboard key. "home" and "channels" are
+// handled specially (home returns to / navigates back to smartTV; channels opens
+// the extension's launcher overlay on the current site) so they sit outside
+// REMOTE_KEYS.
 export type RemoteKeyAction = keyof typeof REMOTE_KEYS
-export type RemoteAction = RemoteKeyAction | "home"
+export type RemoteAction = RemoteKeyAction | "home" | "channels"
 
 export type RemoteMessage = { type: "press"; action: RemoteAction }
 
@@ -58,7 +59,9 @@ export const isRemoteMessage = (value: unknown): value is RemoteMessage => {
   return (
     message.type === "press" &&
     typeof message.action === "string" &&
-    (message.action in REMOTE_KEYS || message.action === "home")
+    (message.action in REMOTE_KEYS ||
+      message.action === "home" ||
+      message.action === "channels")
   )
 }
 

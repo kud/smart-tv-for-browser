@@ -12,6 +12,11 @@ import {
   FiVolume1,
   FiVolume2,
   FiVolumeX,
+  FiChevronUp,
+  FiChevronDown,
+  FiChevronLeft,
+  FiChevronRight,
+  FiGrid,
 } from "react-icons/fi"
 
 import {
@@ -46,6 +51,9 @@ const STATUS_DOT: Record<Status, string> = {
 
 const RemotePage = () => {
   const [status, setStatus] = useState<Status>("idle")
+  // Whether the smartTV app (not just the extension) is the receiver. Drives the
+  // control mode: D-pad on the app, trackpad on sites we don't own.
+  const [onApp, setOnApp] = useState(false)
   const [detail, setDetail] = useState<string | null>(null)
   const [code, setCode] = useState("")
   const [logs, setLogs] = useState<string[]>([])
@@ -103,6 +111,7 @@ const RemotePage = () => {
         if (isPresenceMessage(data)) {
           log(`presence: app ${data.app}, ext ${data.ext}, phone ${data.phone}`)
           setStatus(data.app + data.ext >= 1 ? "connected" : "connecting")
+          setOnApp(data.app >= 1)
           return
         }
         // A text field was focused on the TV — pop the keyboard, pre-filled.
@@ -193,6 +202,7 @@ const RemotePage = () => {
     <main className="relative flex h-dvh flex-col bg-tv-bg text-tv-text select-none">
       {connected ? (
         <ConnectedView
+          mode={onApp ? "buttons" : "trackpad"}
           onPress={press}
           onMove={moveCursor}
           onOpenSheet={() => setSheetOpen(true)}
@@ -338,11 +348,13 @@ const PairView = ({
 )
 
 const ConnectedView = ({
+  mode,
   onPress,
   onMove,
   onOpenSheet,
   onOpenKeyboard,
 }: {
+  mode: "buttons" | "trackpad"
   onPress: (action: RemoteAction) => void
   onMove: (dx: number, dy: number) => void
   onOpenSheet: () => void
@@ -357,7 +369,9 @@ const ConnectedView = ({
         className="flex items-center gap-2 rounded-full bg-white/5 px-3 py-1.5"
       >
         <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
-        <span className="text-xs text-tv-muted">Connected</span>
+        <span className="text-xs text-tv-muted">
+          {mode === "buttons" ? "smartTV" : "Trackpad"}
+        </span>
       </button>
       <button
         type="button"
@@ -370,23 +384,30 @@ const ConnectedView = ({
     </header>
 
     <div className="flex flex-1 items-center justify-center px-6">
-      <TrackPad onPress={onPress} onMove={onMove} />
+      {mode === "buttons" ? (
+        <DPad onPress={onPress} />
+      ) : (
+        <TrackPad onPress={onPress} onMove={onMove} />
+      )}
     </div>
 
-    <div className="grid grid-cols-4 gap-3 px-6 pt-3">
-      <ActionButton label="Vol −" onPress={() => onPress("voldown")}>
-        <FiVolume1 />
-      </ActionButton>
-      <ActionButton label="Play" onPress={() => onPress("playpause")}>
-        <FiPlay />
-      </ActionButton>
-      <ActionButton label="Mute" onPress={() => onPress("mute")}>
-        <FiVolumeX />
-      </ActionButton>
-      <ActionButton label="Vol +" onPress={() => onPress("volup")}>
-        <FiVolume2 />
-      </ActionButton>
-    </div>
+    {/* Media controls only matter on channel sites (the trackpad context). */}
+    {mode === "trackpad" && (
+      <div className="grid grid-cols-4 gap-3 px-6 pt-3">
+        <ActionButton label="Vol −" onPress={() => onPress("voldown")}>
+          <FiVolume1 />
+        </ActionButton>
+        <ActionButton label="Play" onPress={() => onPress("playpause")}>
+          <FiPlay />
+        </ActionButton>
+        <ActionButton label="Mute" onPress={() => onPress("mute")}>
+          <FiVolumeX />
+        </ActionButton>
+        <ActionButton label="Vol +" onPress={() => onPress("volup")}>
+          <FiVolume2 />
+        </ActionButton>
+      </div>
+    )}
 
     <div className="grid grid-cols-3 gap-3 px-6 pt-3 pb-[calc(env(safe-area-inset-bottom)+1.5rem)]">
       <ActionButton label="Back" onPress={() => onPress("back")}>
@@ -395,11 +416,69 @@ const ConnectedView = ({
       <ActionButton label="Home" onPress={() => onPress("home")}>
         <FiHome />
       </ActionButton>
-      <ActionButton label="Menu" onPress={() => onPress("menu")}>
-        <FiMenu />
-      </ActionButton>
+      {mode === "trackpad" ? (
+        <ActionButton label="Channels" onPress={() => onPress("channels")}>
+          <FiGrid />
+        </ActionButton>
+      ) : (
+        <ActionButton label="Menu" onPress={() => onPress("menu")}>
+          <FiMenu />
+        </ActionButton>
+      )}
     </div>
   </>
+)
+
+// The D-pad shown when controlling the smartTV app, which is built for spatial
+// (arrow-key) navigation.
+const DPad = ({ onPress }: { onPress: (action: RemoteAction) => void }) => (
+  <div className="grid aspect-square w-full max-w-[20rem] grid-cols-3 grid-rows-3 gap-3">
+    <span />
+    <PadKey label="Up" onPress={() => onPress("up")}>
+      <FiChevronUp />
+    </PadKey>
+    <span />
+    <PadKey label="Left" onPress={() => onPress("left")}>
+      <FiChevronLeft />
+    </PadKey>
+    <PadKey label="OK" onPress={() => onPress("ok")} ok>
+      OK
+    </PadKey>
+    <PadKey label="Right" onPress={() => onPress("right")}>
+      <FiChevronRight />
+    </PadKey>
+    <span />
+    <PadKey label="Down" onPress={() => onPress("down")}>
+      <FiChevronDown />
+    </PadKey>
+    <span />
+  </div>
+)
+
+const PadKey = ({
+  label,
+  onPress,
+  ok,
+  children,
+}: {
+  label: string
+  onPress: () => void
+  ok?: boolean
+  children: React.ReactNode
+}) => (
+  <button
+    type="button"
+    aria-label={label}
+    onPointerDown={(event) => {
+      event.preventDefault()
+      onPress()
+    }}
+    className={`flex items-center justify-center rounded-2xl bg-white/10 text-tv-text transition-colors active:bg-white/30 ${
+      ok ? "text-xl font-bold" : "text-4xl"
+    }`}
+  >
+    {children}
+  </button>
 )
 
 const ActionButton = ({
