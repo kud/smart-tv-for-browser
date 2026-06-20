@@ -2,7 +2,17 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import { WebSocket as ReconnectingWebSocket } from "partysocket"
-import { FiArrowLeft, FiMenu, FiHome, FiX, FiType } from "react-icons/fi"
+import {
+  FiArrowLeft,
+  FiMenu,
+  FiHome,
+  FiX,
+  FiType,
+  FiPlay,
+  FiVolume1,
+  FiVolume2,
+  FiVolumeX,
+} from "react-icons/fi"
 
 import {
   CODE_LENGTH,
@@ -249,28 +259,25 @@ const Keyboard = ({
       </button>
     </div>
 
-    <div className="flex items-center gap-2">
-      <input
-        autoFocus
-        value={text}
-        onChange={(event) => onText(event.target.value)}
-        onKeyDown={(event) => {
-          if (event.key === "Enter") onSubmit()
-        }}
-        placeholder="Start typing…"
-        className="min-w-0 flex-1 rounded-xl border border-white/15 bg-black/40 px-4 py-4 text-lg outline-none focus:border-sky-400"
-      />
-      <button
-        type="button"
-        onClick={onSubmit}
-        className="shrink-0 rounded-xl bg-sky-500 px-6 py-4 text-lg font-semibold text-white"
-      >
-        Go
-      </button>
-    </div>
+    <textarea
+      autoFocus
+      rows={4}
+      value={text}
+      onChange={(event) => onText(event.target.value)}
+      placeholder="Start typing…"
+      className="w-full resize-none rounded-xl border border-white/15 bg-black/40 px-4 py-4 text-lg outline-none focus:border-sky-400"
+    />
+
+    <button
+      type="button"
+      onClick={onSubmit}
+      className="w-full rounded-xl bg-sky-500 py-4 text-lg font-semibold text-white"
+    >
+      Go
+    </button>
 
     <p className="text-xs text-tv-muted">
-      What you type appears on the TV. Tap Go (or Enter) to submit.
+      What you type appears on the TV. Tap Go to submit (Enter adds a new line).
     </p>
   </div>
 )
@@ -366,7 +373,22 @@ const ConnectedView = ({
       <TrackPad onPress={onPress} onMove={onMove} />
     </div>
 
-    <div className="grid grid-cols-3 gap-3 px-6 pb-[calc(env(safe-area-inset-bottom)+1.5rem)]">
+    <div className="grid grid-cols-4 gap-3 px-6 pt-3">
+      <ActionButton label="Vol −" onPress={() => onPress("voldown")}>
+        <FiVolume1 />
+      </ActionButton>
+      <ActionButton label="Play" onPress={() => onPress("playpause")}>
+        <FiPlay />
+      </ActionButton>
+      <ActionButton label="Mute" onPress={() => onPress("mute")}>
+        <FiVolumeX />
+      </ActionButton>
+      <ActionButton label="Vol +" onPress={() => onPress("volup")}>
+        <FiVolume2 />
+      </ActionButton>
+    </div>
+
+    <div className="grid grid-cols-3 gap-3 px-6 pt-3 pb-[calc(env(safe-area-inset-bottom)+1.5rem)]">
       <ActionButton label="Back" onPress={() => onPress("back")}>
         <FiArrowLeft />
       </ActionButton>
