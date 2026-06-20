@@ -2,20 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import { WebSocket as ReconnectingWebSocket } from "partysocket"
-import {
-  FiChevronUp,
-  FiChevronDown,
-  FiChevronLeft,
-  FiChevronRight,
-  FiArrowLeft,
-  FiMenu,
-  FiHome,
-  FiX,
-  FiGrid,
-  FiCircle,
-} from "react-icons/fi"
+import { FiArrowLeft, FiMenu, FiHome, FiX } from "react-icons/fi"
 
-import { usePersistedState } from "@/hooks/use-persisted-state"
 import {
   CODE_LENGTH,
   RELAY_URL,
@@ -28,7 +16,6 @@ import {
 } from "@/lib/remote"
 
 type Status = "idle" | "connecting" | "connected" | "error"
-type Mode = "buttons" | "trackpad"
 
 const STATUS_LABEL: Record<Status, string> = {
   idle: "Enter the code shown on your TV",
@@ -51,10 +38,6 @@ const RemotePage = () => {
   const [logs, setLogs] = useState<string[]>([])
   const [copied, setCopied] = useState(false)
   const [sheetOpen, setSheetOpen] = useState(false)
-  const [mode, setMode] = usePersistedState<Mode>(
-    "remoteControlMode",
-    "buttons",
-  )
   const socketRef = useRef<ReconnectingWebSocket | null>(null)
   // Trackpad movement is coalesced to one message per animation frame so the
   // cursor streams smoothly instead of flooding the socket on every touch event.
@@ -104,7 +87,6 @@ const RemotePage = () => {
         const data = parseMessage(event.data)
         if (isPresenceMessage(data)) {
           log(`presence: app ${data.app}, ext ${data.ext}, phone ${data.phone}`)
-          // Connected once a receiver — the website or the extension — is live.
           setStatus(data.app + data.ext >= 1 ? "connected" : "connecting")
         }
       })
@@ -181,10 +163,6 @@ const RemotePage = () => {
     <main className="relative flex h-dvh flex-col bg-tv-bg text-tv-text select-none">
       {connected ? (
         <ConnectedView
-          mode={mode}
-          onToggleMode={() =>
-            setMode((m) => (m === "buttons" ? "trackpad" : "buttons"))
-          }
           onPress={press}
           onMove={moveCursor}
           onOpenSheet={() => setSheetOpen(true)}
@@ -202,8 +180,6 @@ const RemotePage = () => {
       {sheetOpen && (
         <Sheet
           status={status}
-          mode={mode}
-          setMode={setMode}
           logs={logs}
           copied={copied}
           copyLogs={copyLogs}
@@ -272,14 +248,10 @@ const PairView = ({
 )
 
 const ConnectedView = ({
-  mode,
-  onToggleMode,
   onPress,
   onMove,
   onOpenSheet,
 }: {
-  mode: Mode
-  onToggleMode: () => void
   onPress: (action: RemoteAction) => void
   onMove: (dx: number, dy: number) => void
   onOpenSheet: () => void
@@ -295,23 +267,10 @@ const ConnectedView = ({
         <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
         <span className="text-xs text-tv-muted">Connected</span>
       </button>
-      <button
-        type="button"
-        onClick={onToggleMode}
-        aria-label="Switch control mode"
-        className="flex items-center gap-2 rounded-full bg-white/5 px-3 py-1.5 text-xs text-tv-muted"
-      >
-        {mode === "buttons" ? <FiGrid /> : <FiCircle />}
-        {mode === "buttons" ? "Buttons" : "Trackpad"}
-      </button>
     </header>
 
     <div className="flex flex-1 items-center justify-center px-6">
-      {mode === "buttons" ? (
-        <ButtonsPad onPress={onPress} />
-      ) : (
-        <TrackPad onPress={onPress} onMove={onMove} />
-      )}
+      <TrackPad onPress={onPress} onMove={onMove} />
     </div>
 
     <div className="grid grid-cols-3 gap-3 px-6 pb-[calc(env(safe-area-inset-bottom)+1.5rem)]">
@@ -328,30 +287,6 @@ const ConnectedView = ({
   </>
 )
 
-const PadButton = ({
-  label,
-  onPress,
-  className,
-  children,
-}: {
-  label: string
-  onPress: () => void
-  className?: string
-  children: React.ReactNode
-}) => (
-  <button
-    type="button"
-    aria-label={label}
-    onPointerDown={(event) => {
-      event.preventDefault()
-      onPress()
-    }}
-    className={`flex items-center justify-center rounded-2xl bg-white/10 text-tv-text transition-colors active:bg-white/30 ${className ?? ""}`}
-  >
-    {children}
-  </button>
-)
-
 const ActionButton = ({
   label,
   onPress,
@@ -361,60 +296,24 @@ const ActionButton = ({
   onPress: () => void
   children: React.ReactNode
 }) => (
-  <PadButton label={label} onPress={onPress} className="flex-col gap-1 py-4">
+  <button
+    type="button"
+    aria-label={label}
+    onPointerDown={(event) => {
+      event.preventDefault()
+      onPress()
+    }}
+    className="flex flex-col items-center justify-center gap-1 rounded-2xl bg-white/10 py-4 text-tv-text transition-colors active:bg-white/30"
+  >
     <span className="text-xl">{children}</span>
     <span className="text-[0.7rem] text-tv-muted">{label}</span>
-  </PadButton>
-)
-
-const ButtonsPad = ({
-  onPress,
-}: {
-  onPress: (action: RemoteAction) => void
-}) => (
-  <div className="grid aspect-square w-full max-w-[20rem] grid-cols-3 grid-rows-3 gap-3">
-    <span />
-    <PadButton label="Up" onPress={() => onPress("up")} className="text-4xl">
-      <FiChevronUp />
-    </PadButton>
-    <span />
-    <PadButton
-      label="Left"
-      onPress={() => onPress("left")}
-      className="text-4xl"
-    >
-      <FiChevronLeft />
-    </PadButton>
-    <PadButton
-      label="OK"
-      onPress={() => onPress("ok")}
-      className="text-xl font-bold"
-    >
-      OK
-    </PadButton>
-    <PadButton
-      label="Right"
-      onPress={() => onPress("right")}
-      className="text-4xl"
-    >
-      <FiChevronRight />
-    </PadButton>
-    <span />
-    <PadButton
-      label="Down"
-      onPress={() => onPress("down")}
-      className="text-4xl"
-    >
-      <FiChevronDown />
-    </PadButton>
-    <span />
-  </div>
+  </button>
 )
 
 // A real trackpad: drag to stream relative cursor movement, tap (no real
 // movement) to click. Acceleration makes small flicks travel far, like a mouse.
 const TRACKPAD_GAIN = 1.7
-const TAP_SLOP = 8
+const TAP_SLOP = 16
 
 const TrackPad = ({
   onPress,
@@ -465,8 +364,6 @@ const TrackPad = ({
 
 const Sheet = ({
   status,
-  mode,
-  setMode,
   logs,
   copied,
   copyLogs,
@@ -475,8 +372,6 @@ const Sheet = ({
   onClose,
 }: {
   status: Status
-  mode: Mode
-  setMode: (mode: Mode) => void
   logs: string[]
   copied: boolean
   copyLogs: () => void
@@ -512,24 +407,6 @@ const Sheet = ({
           Keep this page open while you watch. Works over any internet — the two
           devices don&apos;t need to share Wi-Fi.
         </p>
-
-        <p className="mt-6 text-[0.7rem] font-medium uppercase tracking-wide text-tv-muted">
-          Control mode
-        </p>
-        <div className="mt-2 grid grid-cols-2 gap-2">
-          <ModeOption
-            active={mode === "buttons"}
-            onClick={() => setMode("buttons")}
-            icon={<FiGrid />}
-            label="Buttons"
-          />
-          <ModeOption
-            active={mode === "trackpad"}
-            onClick={() => setMode("trackpad")}
-            icon={<FiCircle />}
-            label="Trackpad"
-          />
-        </div>
 
         <div className="mt-6 flex items-center gap-4 text-xs">
           <button
@@ -569,30 +446,5 @@ const Sheet = ({
     </div>
   )
 }
-
-const ModeOption = ({
-  active,
-  onClick,
-  icon,
-  label,
-}: {
-  active: boolean
-  onClick: () => void
-  icon: React.ReactNode
-  label: string
-}) => (
-  <button
-    type="button"
-    onClick={onClick}
-    className={`flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-medium transition-colors ${
-      active
-        ? "bg-sky-500/20 text-sky-300 ring-1 ring-sky-400/40"
-        : "bg-white/5 text-tv-muted"
-    }`}
-  >
-    {icon}
-    {label}
-  </button>
-)
 
 export default RemotePage

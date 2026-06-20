@@ -6,12 +6,14 @@ import { WebSocket as ReconnectingWebSocket } from "partysocket"
 import {
   isRemoteMessage,
   isPresenceMessage,
+  isMoveMessage,
   parseMessage,
   helloMessage,
   REMOTE_KEYS,
   RELAY_URL,
   roomUrl,
 } from "@/lib/remote"
+import { createVirtualCursor } from "@/lib/virtual-cursor"
 
 const pressKey = (key: string) => {
   window.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true }))
@@ -30,6 +32,9 @@ export const useRemoteReceiver = (code: string | null) => {
   useEffect(() => {
     if (!code || !RELAY_URL) return
     const socket = new ReconnectingWebSocket(roomUrl(code))
+    // The same trackpad cursor the extension uses, here so the phone's pointer
+    // works on the smartTV app itself (one trackpad mode for everything).
+    const cursor = createVirtualCursor()
 
     // Announce on every (re)connect so the relay counts us as the app receiver.
     const onOpen = () => socket.send(helloMessage("app"))
@@ -40,9 +45,19 @@ export const useRemoteReceiver = (code: string | null) => {
         setExtConnected(data.ext >= 1)
         return
       }
+      if (isMoveMessage(data)) {
+        cursor.move(data.dx, data.dy)
+        return
+      }
       if (isRemoteMessage(data)) {
         if (data.action === "home") {
           window.dispatchEvent(new CustomEvent("smarttv-home"))
+          return
+        }
+        // When the trackpad is in use, OK clicks where the cursor points;
+        // otherwise it activates the spatially-focused element via Enter.
+        if (data.action === "ok" && cursor.isPlaced()) {
+          cursor.click()
           return
         }
         pressKey(REMOTE_KEYS[data.action])
@@ -55,6 +70,7 @@ export const useRemoteReceiver = (code: string | null) => {
       socket.removeEventListener("open", onOpen)
       socket.removeEventListener("message", onMessage)
       socket.close()
+      cursor.destroy()
       setPhoneConnected(false)
       setExtConnected(false)
     }
