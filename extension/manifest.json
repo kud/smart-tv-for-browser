@@ -5,7 +5,8 @@
   "description": "Press Alt+Shift+H on any channel to open the smartTV launcher — jump home or switch channels, like a remote.",
   "permissions": [
     "storage",
-    "tabs"
+    "tabs",
+    "alarms"
   ],
   "background": {
     "service_worker": "background.js",

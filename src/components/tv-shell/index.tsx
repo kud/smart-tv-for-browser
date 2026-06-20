@@ -101,10 +101,15 @@ export const TvShell = () => {
   const [showHelp, setShowHelp] = useState(false)
   const [showAbout, setShowAbout] = useState(false)
   const [showRemote, setShowRemote] = useState(false)
-  // A code is generated once the user opens the remote and kept for the session,
-  // so the receiver stays joined to the room — the phone keeps controlling the
-  // app after the pairing modal is closed.
-  const [remoteCode, setRemoteCode] = useState<string | null>(null)
+  // A code is generated once the user opens the remote and then persisted, so
+  // the receiver stays joined to the room — the phone keeps controlling the app
+  // after the pairing modal is closed. Persisting also lets the companion
+  // extension's bridge mirror the code so the background worker can take over
+  // the connection once the user launches a channel and leaves the app.
+  const [remoteCode, setRemoteCode] = usePersistedState<string | null>(
+    "remoteCode",
+    null,
+  )
   const { connected: remoteConnected } = useRemoteReceiver(remoteCode)
 
   const closeSettings = useCallback(() => setShowSettings(false), [])

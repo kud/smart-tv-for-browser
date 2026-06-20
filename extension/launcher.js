@@ -181,6 +181,20 @@ const open = () => {
 
 const toggle = () => (isOpen() ? close() : open())
 
+// A press forwarded from the phone (via the background worker). Dispatch from
+// the focused element so the event bubbles up through document and window —
+// reaching both this overlay's Escape handler and the host site's own keyboard
+// navigation (so the remote drives e.g. Netflix's UI once you leave smartTV).
+const pressKey = (key) => {
+  const target =
+    document.activeElement || document.body || document.documentElement
+  const init = { key, bubbles: true, cancelable: true }
+  target.dispatchEvent(new KeyboardEvent("keydown", init))
+  target.dispatchEvent(new KeyboardEvent("keyup", init))
+}
+
 api.runtime.onMessage.addListener((message) => {
   if (message?.type === "smarttv-toggle") toggle()
+  else if (message?.type === "smarttv-press" && message.key)
+    pressKey(message.key)
 })
