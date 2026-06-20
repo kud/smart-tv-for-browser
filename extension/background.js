@@ -22,7 +22,7 @@ const REMOTE_KEYS = {
 let socket = null
 let currentCode = null
 
-const DEFAULT_HOME = "http://localhost:3000/"
+const DEFAULT_HOME = "https://smart-tv.kud.io/"
 
 // Forward a remote action to the active tab. "home" is special: rather than a
 // key, it navigates the tab back to smartTV — the real "get me out of Netflix"

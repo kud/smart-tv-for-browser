@@ -1,5 +1,5 @@
 const api = globalThis.browser ?? globalThis.chrome
-const DEFAULT_HOME = "http://localhost:3000/"
+const DEFAULT_HOME = "https://smart-tv.kud.io/"
 const HOST_ID = "smarttv-launcher-host"
 const CUSTOM_CHANNEL_BG = "#1d1d26"
 

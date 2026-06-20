@@ -1,5 +1,5 @@
 const api = globalThis.browser ?? globalThis.chrome
-const DEFAULT_HOME = "http://localhost:3000/"
+const DEFAULT_HOME = "https://smart-tv.kud.io/"
 const input = document.getElementById("homeUrl")
 const status = document.getElementById("status")
 
