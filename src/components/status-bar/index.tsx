@@ -1,11 +1,12 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { FiWifi, FiWifiOff } from "react-icons/fi"
+import { FiWifi, FiWifiOff, FiMaximize, FiMinimize } from "react-icons/fi"
 import { AnimatePresence, motion } from "motion/react"
 
 import { Wordmark } from "@/components/wordmark"
 import { useOutsideClick } from "@/hooks/use-outside-click"
+import { useFullscreen } from "@/hooks/use-fullscreen"
 
 type ConnectionInfo = {
   effectiveType?: string
@@ -39,6 +40,7 @@ export const StatusBar = ({ hour12 }: { hour12: boolean }) => {
   const [pingMs, setPingMs] = useState<number | null>(null)
   const [showInfo, setShowInfo] = useState(false)
   const [showCalendar, setShowCalendar] = useState(false)
+  const { isFullscreen, toggle: toggleFullscreen } = useFullscreen()
   const infoRef = useRef<HTMLDivElement>(null)
   const calendarRef = useRef<HTMLDivElement>(null)
 
@@ -111,6 +113,19 @@ export const StatusBar = ({ hour12 }: { hour12: boolean }) => {
     <header className="flex items-center justify-between text-tv-muted">
       <Wordmark className="text-[2.6vh]" />
       <div className="flex items-center gap-[1.6vw]">
+        <button
+          type="button"
+          aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+          onClick={toggleFullscreen}
+          className="flex items-center rounded-full p-[0.6vh] transition-colors hover:bg-white/10"
+        >
+          {isFullscreen ? (
+            <FiMinimize className="text-[2.4vh] text-tv-text" />
+          ) : (
+            <FiMaximize className="text-[2.4vh] text-tv-text" />
+          )}
+        </button>
+
         <div ref={infoRef} className="relative">
           <button
             type="button"
