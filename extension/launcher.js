@@ -221,11 +221,83 @@ const pressKey = (key) => {
 
   fire("keydown")
   fire("keyup")
-  console.log("[smartTV] dispatched", key, "->", target.tagName)
+}
+
+const ACTION_KEY = {
+  up: "ArrowUp",
+  down: "ArrowDown",
+  left: "ArrowLeft",
+  right: "ArrowRight",
+  ok: "Enter",
+  back: "Escape",
+  menu: "m",
+}
+
+const FOCUSABLE =
+  'a[href], button, input:not([type="hidden"]), select, textarea, video,' +
+  ' [tabindex], [role="button"], [role="link"], [role="menuitem"], [role="tab"],' +
+  ' [contenteditable="true"]'
+
+const isVisible = (element) => {
+  const rect = element.getBoundingClientRect()
+  if (rect.width < 2 || rect.height < 2) return false
+  const style = getComputedStyle(element)
+  return (
+    style.visibility !== "hidden" &&
+    style.display !== "none" &&
+    style.opacity !== "0"
+  )
+}
+
+const focusables = () =>
+  [...document.querySelectorAll(FOCUSABLE)].filter((element) => {
+    if (element.disabled) return false
+    const tabindex = element.getAttribute("tabindex")
+    if (tabindex !== null && Number(tabindex) < 0) return false
+    return isVisible(element)
+  })
+
+// Be a keyboard: advance the browser's own focus (Tab-like) so the remote moves
+// through accessible sites that ignore arrow keys. The site's native focus ring
+// is the indicator — we draw no cursor of our own.
+const moveFocus = (forward) => {
+  const list = focusables()
+  if (!list.length) return
+  const index = list.indexOf(document.activeElement)
+  const nextIndex =
+    index === -1 ? (forward ? 0 : list.length - 1) : index + (forward ? 1 : -1)
+  const next = list[(nextIndex + list.length) % list.length]
+  next.focus({ preventScroll: true })
+  const rect = next.getBoundingClientRect()
+  const offscreen =
+    rect.top < 0 ||
+    rect.left < 0 ||
+    rect.bottom > window.innerHeight ||
+    rect.right > window.innerWidth
+  if (offscreen) next.scrollIntoView({ block: "center", inline: "center" })
+}
+
+// One remote action = both halves of the "mix": fire the key (for sites with
+// their own key handling, e.g. Netflix) and act on native focus (for sites that
+// only respond to clicks / Tab focus).
+const handleAction = (action) => {
+  const key = ACTION_KEY[action]
+  if (!key) return
+  pressKey(key)
+
+  if (action === "ok") {
+    const element = document.activeElement
+    if (element && element !== document.body) element.click()
+  } else if (action === "down" || action === "right") {
+    moveFocus(true)
+  } else if (action === "up" || action === "left") {
+    moveFocus(false)
+  }
+  console.log("[smartTV]", action)
 }
 
 api.runtime.onMessage.addListener((message) => {
   if (message?.type === "smarttv-toggle") toggle()
-  else if (message?.type === "smarttv-press" && message.key)
-    pressKey(message.key)
+  else if (message?.type === "smarttv-press" && message.action)
+    handleAction(message.action)
 })
