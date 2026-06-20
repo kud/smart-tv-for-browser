@@ -311,8 +311,12 @@ const ActionButton = ({
 )
 
 // A real trackpad: drag to stream relative cursor movement, tap (no real
-// movement) to click. Acceleration makes small flicks travel far, like a mouse.
-const TRACKPAD_GAIN = 1.7
+// movement) to click. Pointer acceleration (factor scales with speed) keeps
+// slow drags precise while fast flicks fly — like a real mouse. The factor is
+// computed from total speed and applied to both axes, so direction is exact.
+const TRACKPAD_GAIN = 1.5
+const TRACKPAD_ACCEL = 0.14
+const TRACKPAD_MAX_BOOST = 3.5
 const TAP_SLOP = 16
 
 const TrackPad = ({
@@ -338,7 +342,12 @@ const TrackPad = ({
     const dy = event.clientY - from.y
     last.current = { x: event.clientX, y: event.clientY }
     travel.current += Math.abs(dx) + Math.abs(dy)
-    if (dx || dy) onMove(dx * TRACKPAD_GAIN, dy * TRACKPAD_GAIN)
+    if (!dx && !dy) return
+    const factor = Math.min(
+      TRACKPAD_GAIN + Math.hypot(dx, dy) * TRACKPAD_ACCEL,
+      TRACKPAD_GAIN + TRACKPAD_MAX_BOOST,
+    )
+    onMove(dx * factor, dy * factor)
   }
 
   const onUp = () => {
