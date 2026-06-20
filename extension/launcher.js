@@ -6,12 +6,21 @@ const CUSTOM_CHANNEL_BG = "#1d1d26"
 let homeUrl = DEFAULT_HOME
 // Settings mirrored from the web app by bridge.js (null until first synced).
 let settings = null
+// Debug logging, toggled in the extension options.
+let debug = false
+
+// When on, log the remote event chain to the page console so issues on sites we
+// don't own (Netflix etc.) can be diagnosed without a debugger.
+const log = (...args) => {
+  if (debug) console.log("[smartTV]", ...args)
+}
 
 api.storage.local
-  .get(["homeUrl", "smarttvSettings"])
-  .then(({ homeUrl: storedHome, smarttvSettings }) => {
+  .get(["homeUrl", "smarttvSettings", "debug"])
+  .then(({ homeUrl: storedHome, smarttvSettings, debug: storedDebug }) => {
     if (storedHome) homeUrl = storedHome
     if (smarttvSettings) settings = smarttvSettings
+    debug = Boolean(storedDebug)
   })
   .catch(() => {})
 
@@ -21,6 +30,7 @@ api.storage.onChanged?.addListener((changes, area) => {
   if (area !== "local") return
   if (changes.homeUrl) homeUrl = changes.homeUrl.newValue || DEFAULT_HOME
   if (changes.smarttvSettings) settings = changes.smarttvSettings.newValue
+  if (changes.debug) debug = Boolean(changes.debug.newValue)
 })
 
 // Replicate the website's display logic: enabled built-ins (saved selection wins
@@ -403,13 +413,15 @@ const clickCursor = () => {
 
 const MEDIA_ACTIONS = new Set(["playpause", "mute", "volup", "voldown"])
 
-// The biggest playing <video> on the page — the main player, not an ad thumb.
+// The biggest <video> on the page — the main player, not an ad thumb. Prefers
+// ones with a source, but falls back to any video so a momentarily-empty player
+// (e.g. mid-load) is still found.
 const pickVideo = () => {
-  const videos = [...document.querySelectorAll("video")].filter(
-    (v) => v.currentSrc || v.readyState > 0,
-  )
-  if (!videos.length) return null
-  return videos.sort((a, b) => {
+  const all = [...document.querySelectorAll("video")]
+  const sourced = all.filter((v) => v.currentSrc || v.readyState > 0)
+  const list = sourced.length ? sourced : all
+  if (!list.length) return null
+  return list.sort((a, b) => {
     const ra = a.getBoundingClientRect()
     const rb = b.getBoundingClientRect()
     return rb.width * rb.height - ra.width * ra.height
@@ -421,10 +433,28 @@ const pickVideo = () => {
 // so the caller can fall back to a keystroke.
 const mediaAction = (action) => {
   const video = pickVideo()
+  log(
+    "media",
+    action,
+    "— videos:",
+    document.querySelectorAll("video").length,
+    "target:",
+    !!video,
+    video ? { paused: video.paused, muted: video.muted } : "",
+  )
   if (!video) return false
   if (action === "playpause") {
-    if (video.paused) video.play()
-    else video.pause()
+    if (video.paused) {
+      const playing = video.play()
+      // play() can be rejected without a user gesture — fall back to the site's
+      // own play shortcut (Space), which its player handles.
+      if (playing && playing.catch)
+        playing.catch(() => {
+          pressKey(" ")
+        })
+    } else {
+      video.pause()
+    }
   } else if (action === "mute") {
     video.muted = !video.muted
   } else if (action === "volup") {
@@ -572,16 +602,19 @@ document.addEventListener(
 
 api.runtime.onMessage.addListener((message) => {
   if (message?.type === "smarttv-toggle") toggle()
-  else if (message?.type === "smarttv-press" && message.action)
+  else if (message?.type === "smarttv-press" && message.action) {
+    log("press", message.action)
     handleAction(message.action)
-  else if (message?.type === "smarttv-move") {
+  } else if (message?.type === "smarttv-move") {
     if (isLeanback()) swipeToArrows(message.dx, message.dy)
     else moveCursorBy(message.dx, message.dy)
   } else if (message?.type === "smarttv-text") {
     const el = document.activeElement
+    log("text →", isEditable(el) ? el.tagName : "no editable focused")
     if (isEditable(el)) writeEditable(el, message.value)
   } else if (message?.type === "smarttv-submit") {
     const el = document.activeElement
+    log("submit →", isEditable(el) ? el.tagName : "no editable focused")
     if (isEditable(el)) {
       pressKey("Enter")
       if (el.form && el.form.requestSubmit) el.form.requestSubmit()
