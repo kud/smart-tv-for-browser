@@ -181,16 +181,47 @@ const open = () => {
 
 const toggle = () => (isOpen() ? close() : open())
 
+// Legacy keyCode/code for each key we send. Many players and apps read
+// event.keyCode / event.which (not event.key), and the KeyboardEvent
+// constructor leaves those at 0 — so we force them below.
+const KEY_INFO = {
+  ArrowUp: { code: "ArrowUp", keyCode: 38 },
+  ArrowDown: { code: "ArrowDown", keyCode: 40 },
+  ArrowLeft: { code: "ArrowLeft", keyCode: 37 },
+  ArrowRight: { code: "ArrowRight", keyCode: 39 },
+  Enter: { code: "Enter", keyCode: 13 },
+  Escape: { code: "Escape", keyCode: 27 },
+  m: { code: "KeyM", keyCode: 77 },
+}
+
 // A press forwarded from the phone (via the background worker). Dispatch from
-// the focused element so the event bubbles up through document and window —
+// the focused element so the event bubbles through document and window —
 // reaching both this overlay's Escape handler and the host site's own keyboard
 // navigation (so the remote drives e.g. Netflix's UI once you leave smartTV).
 const pressKey = (key) => {
+  const info = KEY_INFO[key] || { code: key, keyCode: 0 }
   const target =
-    document.activeElement || document.body || document.documentElement
-  const init = { key, bubbles: true, cancelable: true }
-  target.dispatchEvent(new KeyboardEvent("keydown", init))
-  target.dispatchEvent(new KeyboardEvent("keyup", init))
+    document.activeElement && document.activeElement !== document.body
+      ? document.activeElement
+      : document.body || document.documentElement
+
+  const fire = (eventType) => {
+    const event = new KeyboardEvent(eventType, {
+      key,
+      code: info.code,
+      bubbles: true,
+      cancelable: true,
+      view: window,
+    })
+    // Force the legacy fields the constructor won't set.
+    Object.defineProperty(event, "keyCode", { get: () => info.keyCode })
+    Object.defineProperty(event, "which", { get: () => info.keyCode })
+    target.dispatchEvent(event)
+  }
+
+  fire("keydown")
+  fire("keyup")
+  console.log("[smartTV] dispatched", key, "->", target.tagName)
 }
 
 api.runtime.onMessage.addListener((message) => {
