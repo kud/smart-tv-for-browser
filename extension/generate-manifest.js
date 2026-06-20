@@ -79,7 +79,7 @@ const channels = Object.entries(services).map(([id, service]) => ({
 
 const manifest = {
   manifest_version: 3,
-  name: "smartTV Home",
+  name: "smartTV",
   version: "0.1.0",
   description:
     "Press Alt+Shift+H on any channel to open the smartTV launcher — jump home or switch channels, like a remote.",
