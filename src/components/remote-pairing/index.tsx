@@ -3,7 +3,12 @@
 import { useEffect, useState } from "react"
 import { motion } from "motion/react"
 import QRCode from "qrcode"
-import { FiSmartphone, FiCheckCircle, FiPackage } from "react-icons/fi"
+import {
+  FiSmartphone,
+  FiCheckCircle,
+  FiPackage,
+  FiRefreshCw,
+} from "react-icons/fi"
 import { pause, resume } from "@noriginmedia/norigin-spatial-navigation"
 
 import { CODE_LENGTH } from "@/lib/remote"
@@ -14,11 +19,13 @@ export const RemotePairing = ({
   code,
   phoneConnected,
   extConnected,
+  onRegenerate,
   onClose,
 }: {
   code: string | null
   phoneConnected: boolean
   extConnected: boolean
+  onRegenerate: () => void
   onClose: () => void
 }) => {
   const [qr, setQr] = useState<string | null>(null)
@@ -129,8 +136,16 @@ export const RemotePairing = ({
 
         <button
           type="button"
+          onClick={onRegenerate}
+          className="flex items-center gap-[0.5vw] text-[1.6vh] text-tv-muted transition-colors hover:text-tv-text"
+        >
+          <FiRefreshCw /> New code — disconnects the current phone
+        </button>
+
+        <button
+          type="button"
           onClick={onClose}
-          className="mt-[1vh] rounded-full bg-white/10 px-[2.4vw] py-[1.2vh] text-[2vh] text-tv-text transition-colors hover:bg-white/20"
+          className="mt-[0.5vh] rounded-full bg-white/10 px-[2.4vw] py-[1.2vh] text-[2vh] text-tv-text transition-colors hover:bg-white/20"
         >
           {phoneConnected ? "Done" : "Cancel"}
         </button>
