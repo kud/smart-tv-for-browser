@@ -285,7 +285,6 @@ let cursorEl = null
 let cursorX = 0
 let cursorY = 0
 let cursorPlaced = false
-let cursorVisible = false
 let cursorHideTimer = 0
 let hovered = null
 
@@ -315,12 +314,10 @@ const ensureCursor = () => {
 const showCursor = () => {
   const el = ensureCursor()
   el.style.opacity = "1"
-  cursorVisible = true
   clearTimeout(cursorHideTimer)
   cursorHideTimer = setTimeout(() => {
-    cursorVisible = false
     if (cursorEl) cursorEl.style.opacity = "0"
-  }, 4000)
+  }, 5000)
 }
 
 const fireAt = (type, x, y, extra) => {
@@ -401,9 +398,9 @@ const handleAction = (action) => {
   pressKey(key)
 
   if (action === "ok") {
-    // If the trackpad cursor is active, click where it points; otherwise
-    // activate the focus-navigated element.
-    if (cursorVisible) {
+    // If the trackpad cursor has been used, click where it points (even if the
+    // dot has faded); otherwise activate the focus-navigated element.
+    if (cursorPlaced) {
       clickCursor()
     } else {
       const element = document.activeElement
