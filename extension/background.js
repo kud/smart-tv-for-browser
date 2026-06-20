@@ -60,6 +60,18 @@ const forwardMove = async (dx, dy) => {
   }
 }
 
+const forwardToTab = async (payload) => {
+  try {
+    const [tab] = await api.tabs.query({
+      active: true,
+      lastFocusedWindow: true,
+    })
+    if (tab?.id) await api.tabs.sendMessage(tab.id, payload)
+  } catch {
+    // Active tab has no content script.
+  }
+}
+
 const disconnect = () => {
   if (!socket) return
   try {
@@ -111,6 +123,10 @@ const connect = (code) => {
       typeof data.dy === "number"
     ) {
       forwardMove(data.dx, data.dy)
+    } else if (data?.type === "text" && typeof data.value === "string") {
+      forwardToTab({ type: "smarttv-text", value: data.value })
+    } else if (data?.type === "submit") {
+      forwardToTab({ type: "smarttv-submit" })
     }
   })
   ws.addEventListener("close", () => {
@@ -195,6 +211,24 @@ api.runtime.onInstalled.addListener(applyYtMode)
 ensureConnected()
 applyYtMode()
 
+// Content scripts report text-field focus here; relay it to the phone so it can
+// pop its keyboard.
+api.runtime.onMessage.addListener((message) => {
+  if (
+    message?.type === "smarttv-focus" &&
+    socket &&
+    socket.readyState === WebSocket.OPEN
+  ) {
+    socket.send(
+      JSON.stringify({
+        type: "focus",
+        editing: Boolean(message.editing),
+        value: message.value || "",
+      }),
+    )
+  }
+})
+
 // MV3 evicts idle service workers; an open WebSocket extends the lifetime
 // (Chrome 116+), and this alarm wakes us to reconnect if it ever dropped.
 api.alarms.create("smarttv-keepalive", { periodInMinutes: 0.5 })
@@ -202,16 +236,24 @@ api.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === "smarttv-keepalive") ensureConnected()
 })
 
-// The remote-style launcher key: toggles the overlay on the active channel tab.
-// Works even when the page has focus, because commands are handled by the
-// extension, not the host page.
-api.commands.onCommand.addListener(async (command) => {
-  if (command !== "toggle-launcher") return
-  const [tab] = await api.tabs.query({ active: true, currentWindow: true })
-  if (!tab?.id) return
+// Toggle the launcher overlay on the active tab. Driven by the keyboard command
+// and the toolbar icon. Works even when the page has focus, because it's the
+// extension (not the host page) handling the trigger.
+const toggleLauncher = async (tab) => {
+  const target =
+    tab ?? (await api.tabs.query({ active: true, currentWindow: true }))[0]
+  if (!target?.id) return
   try {
-    await api.tabs.sendMessage(tab.id, { type: "smarttv-toggle" })
+    await api.tabs.sendMessage(target.id, { type: "smarttv-toggle" })
   } catch {
     // No content script on this tab (e.g. a browser-internal page) — ignore.
   }
+}
+
+api.commands.onCommand.addListener((command) => {
+  if (command === "toggle-launcher") toggleLauncher()
 })
+
+// Clicking the toolbar icon opens the launcher (no popup is set, so onClicked
+// fires).
+api.action?.onClicked.addListener((tab) => toggleLauncher(tab))

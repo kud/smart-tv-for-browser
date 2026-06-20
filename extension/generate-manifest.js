@@ -97,6 +97,12 @@ const manifest = {
   },
   options_ui: { page: "options.html", open_in_tab: true },
   icons: { 192: "icon-192.png", 512: "icon-512.png" },
+  // No default_popup → clicking the toolbar icon fires action.onClicked, which
+  // opens the launcher overlay on the active tab.
+  action: {
+    default_title: "Open the smartTV launcher",
+    default_icon: { 192: "icon-192.png", 512: "icon-512.png" },
+  },
   commands: {
     "toggle-launcher": {
       suggested_key: { default: "Alt+Shift+H" },
