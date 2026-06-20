@@ -192,6 +192,7 @@ const KEY_INFO = {
   Enter: { code: "Enter", keyCode: 13 },
   Escape: { code: "Escape", keyCode: 27 },
   m: { code: "KeyM", keyCode: 77 },
+  " ": { code: "Space", keyCode: 32 },
 }
 
 // A press forwarded from the phone (via the background worker). Dispatch from
@@ -231,6 +232,10 @@ const ACTION_KEY = {
   ok: "Enter",
   back: "Escape",
   menu: "m",
+  playpause: " ",
+  mute: "m",
+  volup: "ArrowUp",
+  voldown: "ArrowDown",
 }
 
 const FOCUSABLE =
@@ -396,9 +401,53 @@ const clickCursor = () => {
   if (target && typeof target.focus === "function") target.focus()
 }
 
+const MEDIA_ACTIONS = new Set(["playpause", "mute", "volup", "voldown"])
+
+// The biggest playing <video> on the page — the main player, not an ad thumb.
+const pickVideo = () => {
+  const videos = [...document.querySelectorAll("video")].filter(
+    (v) => v.currentSrc || v.readyState > 0,
+  )
+  if (!videos.length) return null
+  return videos.sort((a, b) => {
+    const ra = a.getBoundingClientRect()
+    const rb = b.getBoundingClientRect()
+    return rb.width * rb.height - ra.width * ra.height
+  })[0]
+}
+
+// Media controls: drive the <video> element directly — site-independent and far
+// more reliable than guessing each site's hotkeys. Returns false if no video,
+// so the caller can fall back to a keystroke.
+const mediaAction = (action) => {
+  const video = pickVideo()
+  if (!video) return false
+  if (action === "playpause") {
+    if (video.paused) video.play()
+    else video.pause()
+  } else if (action === "mute") {
+    video.muted = !video.muted
+  } else if (action === "volup") {
+    video.muted = false
+    video.volume = Math.min(1, video.volume + 0.1)
+  } else if (action === "voldown") {
+    video.volume = Math.max(0, video.volume - 0.1)
+  }
+  return true
+}
+
 // One remote action = both halves of the "mix": fire the key (for sites with
 // their own key handling, e.g. Netflix) and act on focus or the cursor.
 const handleAction = (action) => {
+  if (MEDIA_ACTIONS.has(action)) {
+    // Try the video element first; fall back to the site's key if none found.
+    if (!mediaAction(action)) {
+      const fallback = ACTION_KEY[action]
+      if (fallback) pressKey(fallback)
+    }
+    return
+  }
+
   const key = ACTION_KEY[action]
   if (!key) return
   pressKey(key)

@@ -14,6 +14,12 @@ export const REMOTE_KEYS = {
   ok: "Enter",
   back: "Escape",
   menu: "m",
+  // Media controls — fallback keys; the extension drives the <video> element
+  // directly, which is more reliable than per-site hotkeys.
+  playpause: " ",
+  mute: "m",
+  volup: "ArrowUp",
+  voldown: "ArrowDown",
 } as const
 
 // Actions that map directly to a keyboard key. "home" is handled specially (the

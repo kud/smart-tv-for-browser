@@ -122,12 +122,6 @@ const manifest = {
       all_frames: false,
       js: ["bridge.js"],
     },
-    {
-      matches: ["*://*.youtube.com/*"],
-      run_at: "document_start",
-      all_frames: false,
-      js: ["yt-redirect.js"],
-    },
   ],
 }
 

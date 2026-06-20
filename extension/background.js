@@ -175,15 +175,11 @@ const applyYtMode = async () => {
                 ],
               },
               condition: {
-                urlFilter: "||youtube.com/",
-                resourceTypes: [
-                  "main_frame",
-                  "sub_frame",
-                  "xmlhttprequest",
-                  "script",
-                  "media",
-                  "other",
-                ],
+                // Only the /tv document itself — so plain youtube.com stays
+                // classic. Leanback's own API calls identify as a TV client via
+                // request params, not the UA, so this is enough.
+                urlFilter: "||youtube.com/tv",
+                resourceTypes: ["main_frame", "sub_frame"],
               },
             },
           ]
