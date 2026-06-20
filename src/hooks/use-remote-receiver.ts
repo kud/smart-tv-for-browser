@@ -7,13 +7,22 @@ import {
   isRemoteMessage,
   isPresenceMessage,
   isMoveMessage,
+  isTextMessage,
+  isSubmitMessage,
   parseMessage,
   helloMessage,
+  focusMessage,
   REMOTE_KEYS,
   RELAY_URL,
   roomUrl,
 } from "@/lib/remote"
 import { createVirtualCursor } from "@/lib/virtual-cursor"
+import {
+  isEditable,
+  readEditable,
+  writeEditable,
+  submitEditable,
+} from "@/lib/text-field"
 
 const pressKey = (key: string) => {
   window.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true }))
@@ -49,6 +58,16 @@ export const useRemoteReceiver = (code: string | null) => {
         cursor.move(data.dx, data.dy)
         return
       }
+      if (isTextMessage(data)) {
+        const active = document.activeElement
+        if (isEditable(active)) writeEditable(active, data.value)
+        return
+      }
+      if (isSubmitMessage(data)) {
+        const active = document.activeElement
+        if (isEditable(active)) submitEditable(active)
+        return
+      }
       if (isRemoteMessage(data)) {
         if (data.action === "home") {
           window.dispatchEvent(new CustomEvent("smarttv-home"))
@@ -64,11 +83,24 @@ export const useRemoteReceiver = (code: string | null) => {
       }
     }
 
+    // Tell the phone when a text field is focused so it can pop its keyboard.
+    const onFocusIn = (event: FocusEvent) => {
+      if (isEditable(event.target))
+        socket.send(focusMessage(true, readEditable(event.target)))
+    }
+    const onFocusOut = (event: FocusEvent) => {
+      if (isEditable(event.target)) socket.send(focusMessage(false))
+    }
+
     socket.addEventListener("open", onOpen)
     socket.addEventListener("message", onMessage)
+    document.addEventListener("focusin", onFocusIn)
+    document.addEventListener("focusout", onFocusOut)
     return () => {
       socket.removeEventListener("open", onOpen)
       socket.removeEventListener("message", onMessage)
+      document.removeEventListener("focusin", onFocusIn)
+      document.removeEventListener("focusout", onFocusOut)
       socket.close()
       cursor.destroy()
       setPhoneConnected(false)

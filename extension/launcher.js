@@ -453,6 +453,73 @@ const swipeToArrows = (dx, dy) => {
   }, 250)
 }
 
+// --- Text entry -----------------------------------------------------------
+const NON_TEXT_INPUT = new Set([
+  "button",
+  "submit",
+  "reset",
+  "checkbox",
+  "radio",
+  "range",
+  "color",
+  "file",
+  "image",
+  "hidden",
+])
+
+const isEditable = (el) => {
+  if (!el) return false
+  if (el.tagName === "TEXTAREA") return !el.disabled && !el.readOnly
+  if (el.tagName === "INPUT")
+    return !el.disabled && !el.readOnly && !NON_TEXT_INPUT.has(el.type)
+  return el.isContentEditable
+}
+
+const readEditable = (el) =>
+  el.tagName === "INPUT" || el.tagName === "TEXTAREA"
+    ? el.value
+    : el.textContent || ""
+
+// Native setter + input event so React-controlled fields register the change.
+const writeEditable = (el, value) => {
+  if (el.tagName === "INPUT" || el.tagName === "TEXTAREA") {
+    const proto =
+      el.tagName === "TEXTAREA"
+        ? HTMLTextAreaElement.prototype
+        : HTMLInputElement.prototype
+    const setter = Object.getOwnPropertyDescriptor(proto, "value").set
+    if (setter) setter.call(el, value)
+    else el.value = value
+  } else {
+    el.textContent = value
+  }
+  el.dispatchEvent(new Event("input", { bubbles: true }))
+}
+
+// Tell the background (which holds the relay socket) when a text field is
+// focused, so the phone can pop its keyboard.
+const reportFocus = (editing, value) => {
+  try {
+    api.runtime.sendMessage({ type: "smarttv-focus", editing, value })
+  } catch {
+    /* background asleep */
+  }
+}
+document.addEventListener(
+  "focusin",
+  (event) => {
+    if (isEditable(event.target)) reportFocus(true, readEditable(event.target))
+  },
+  true,
+)
+document.addEventListener(
+  "focusout",
+  (event) => {
+    if (isEditable(event.target)) reportFocus(false, "")
+  },
+  true,
+)
+
 api.runtime.onMessage.addListener((message) => {
   if (message?.type === "smarttv-toggle") toggle()
   else if (message?.type === "smarttv-press" && message.action)
@@ -460,5 +527,11 @@ api.runtime.onMessage.addListener((message) => {
   else if (message?.type === "smarttv-move") {
     if (isLeanback()) swipeToArrows(message.dx, message.dy)
     else moveCursorBy(message.dx, message.dy)
+  } else if (message?.type === "smarttv-text") {
+    const el = document.activeElement
+    if (isEditable(el)) writeEditable(el, message.value)
+  } else if (message?.type === "smarttv-submit") {
+    const el = document.activeElement
+    if (isEditable(el)) pressKey("Enter")
   }
 })

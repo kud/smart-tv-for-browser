@@ -56,6 +56,33 @@ export const isRemoteMessage = (value: unknown): value is RemoteMessage => {
   )
 }
 
+// Text entry. A receiver tells the phone when a text field is focused (so the
+// phone pops its keyboard); the phone streams the typed value back and can
+// submit (Enter).
+export type FocusMessage = { type: "focus"; editing: boolean; value: string }
+export const focusMessage = (editing: boolean, value = "") =>
+  JSON.stringify({ type: "focus", editing, value })
+export const isFocusMessage = (value: unknown): value is FocusMessage => {
+  if (!value || typeof value !== "object") return false
+  const message = value as Record<string, unknown>
+  return message.type === "focus" && typeof message.editing === "boolean"
+}
+
+export type TextMessage = { type: "text"; value: string }
+export const textMessage = (value: string) =>
+  JSON.stringify({ type: "text", value })
+export const isTextMessage = (value: unknown): value is TextMessage => {
+  if (!value || typeof value !== "object") return false
+  const message = value as Record<string, unknown>
+  return message.type === "text" && typeof message.value === "string"
+}
+
+export const submitMessage = () => JSON.stringify({ type: "submit" })
+export const isSubmitMessage = (value: unknown) =>
+  Boolean(value) &&
+  typeof value === "object" &&
+  (value as Record<string, unknown>).type === "submit"
+
 export type PresenceMessage = {
   type: "presence"
   app: number

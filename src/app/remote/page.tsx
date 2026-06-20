@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import { WebSocket as ReconnectingWebSocket } from "partysocket"
-import { FiArrowLeft, FiMenu, FiHome, FiX } from "react-icons/fi"
+import { FiArrowLeft, FiMenu, FiHome, FiX, FiType } from "react-icons/fi"
 
 import {
   CODE_LENGTH,
@@ -10,7 +10,10 @@ import {
   roomUrl,
   helloMessage,
   moveMessage,
+  textMessage,
+  submitMessage,
   isPresenceMessage,
+  isFocusMessage,
   parseMessage,
   type RemoteAction,
 } from "@/lib/remote"
@@ -38,6 +41,8 @@ const RemotePage = () => {
   const [logs, setLogs] = useState<string[]>([])
   const [copied, setCopied] = useState(false)
   const [sheetOpen, setSheetOpen] = useState(false)
+  const [keyboardOpen, setKeyboardOpen] = useState(false)
+  const [text, setText] = useState("")
   const socketRef = useRef<ReconnectingWebSocket | null>(null)
   // Trackpad movement is coalesced to one message per animation frame so the
   // cursor streams smoothly instead of flooding the socket on every touch event.
@@ -88,6 +93,16 @@ const RemotePage = () => {
         if (isPresenceMessage(data)) {
           log(`presence: app ${data.app}, ext ${data.ext}, phone ${data.phone}`)
           setStatus(data.app + data.ext >= 1 ? "connected" : "connecting")
+          return
+        }
+        // A text field was focused on the TV — pop the keyboard, pre-filled.
+        if (isFocusMessage(data)) {
+          if (data.editing) {
+            setText(data.value)
+            setKeyboardOpen(true)
+          } else {
+            setKeyboardOpen(false)
+          }
         }
       })
       socket.addEventListener("close", () => {
@@ -157,6 +172,11 @@ const RemotePage = () => {
     setSheetOpen(false)
   }
 
+  const sendText = (value: string) => {
+    setText(value)
+    sendRaw(textMessage(value))
+  }
+
   const connected = status === "connected"
 
   return (
@@ -166,6 +186,7 @@ const RemotePage = () => {
           onPress={press}
           onMove={moveCursor}
           onOpenSheet={() => setSheetOpen(true)}
+          onOpenKeyboard={() => setKeyboardOpen(true)}
         />
       ) : (
         <PairView
@@ -174,6 +195,15 @@ const RemotePage = () => {
           code={code}
           setCode={setCode}
           onPair={() => connect(code)}
+        />
+      )}
+
+      {connected && keyboardOpen && (
+        <Keyboard
+          text={text}
+          onText={sendText}
+          onSubmit={() => sendRaw(submitMessage())}
+          onClose={() => setKeyboardOpen(false)}
         />
       )}
 
@@ -191,6 +221,49 @@ const RemotePage = () => {
     </main>
   )
 }
+
+// The phone's keyboard for typing into a focused field on the TV. The text input
+// is autofocused (which opens the mobile keyboard on a real tap); every change
+// streams to the TV, and Go submits (Enter).
+const Keyboard = ({
+  text,
+  onText,
+  onSubmit,
+  onClose,
+}: {
+  text: string
+  onText: (value: string) => void
+  onSubmit: () => void
+  onClose: () => void
+}) => (
+  <div className="fixed inset-x-0 bottom-0 z-40 flex items-center gap-2 border-t border-white/10 bg-tv-elevated p-4 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
+    <input
+      autoFocus
+      value={text}
+      onChange={(event) => onText(event.target.value)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter") onSubmit()
+      }}
+      placeholder="Type for the TV…"
+      className="min-w-0 flex-1 rounded-xl border border-white/15 bg-black/40 px-4 py-3 text-base outline-none focus:border-sky-400"
+    />
+    <button
+      type="button"
+      onClick={onSubmit}
+      className="shrink-0 rounded-xl bg-sky-500 px-5 py-3 font-semibold text-white"
+    >
+      Go
+    </button>
+    <button
+      type="button"
+      onClick={onClose}
+      aria-label="Close keyboard"
+      className="shrink-0 rounded-xl bg-white/10 px-4 py-3 text-tv-muted"
+    >
+      <FiX />
+    </button>
+  </div>
+)
 
 const Brand = () => (
   <span className="text-2xl font-bold tracking-tight">
@@ -251,10 +324,12 @@ const ConnectedView = ({
   onPress,
   onMove,
   onOpenSheet,
+  onOpenKeyboard,
 }: {
   onPress: (action: RemoteAction) => void
   onMove: (dx: number, dy: number) => void
   onOpenSheet: () => void
+  onOpenKeyboard: () => void
 }) => (
   <>
     <header className="flex items-center justify-between px-5 pt-5">
@@ -266,6 +341,14 @@ const ConnectedView = ({
       >
         <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
         <span className="text-xs text-tv-muted">Connected</span>
+      </button>
+      <button
+        type="button"
+        onClick={onOpenKeyboard}
+        aria-label="Open keyboard"
+        className="flex items-center gap-2 rounded-full bg-white/5 px-3 py-1.5 text-xs text-tv-muted"
+      >
+        <FiType /> Keyboard
       </button>
     </header>
 
