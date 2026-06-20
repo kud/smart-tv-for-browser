@@ -277,27 +277,149 @@ const moveFocus = (forward) => {
   if (offscreen) next.scrollIntoView({ block: "center", inline: "center" })
 }
 
+// --- Virtual pointer (the phone's trackpad) -------------------------------
+// A real on-screen cursor we move with relative deltas, synthesising hover and
+// click via elementFromPoint — so it points at and activates anything, like a
+// mouse, on sites where focus navigation is too slow.
+let cursorEl = null
+let cursorX = 0
+let cursorY = 0
+let cursorPlaced = false
+let cursorVisible = false
+let cursorHideTimer = 0
+let hovered = null
+
+const ensureCursor = () => {
+  if (cursorEl) return cursorEl
+  cursorEl = document.createElement("div")
+  cursorEl.id = "smarttv-cursor"
+  Object.assign(cursorEl.style, {
+    position: "fixed",
+    left: "0px",
+    top: "0px",
+    width: "22px",
+    height: "22px",
+    margin: "-11px 0 0 -11px",
+    borderRadius: "50%",
+    background: "rgba(56,189,248,.9)",
+    boxShadow: "0 0 0 2px rgba(255,255,255,.9), 0 2px 10px rgba(0,0,0,.5)",
+    pointerEvents: "none",
+    zIndex: "2147483647",
+    transition: "opacity .2s ease",
+    opacity: "0",
+  })
+  ;(document.body || document.documentElement).appendChild(cursorEl)
+  return cursorEl
+}
+
+const showCursor = () => {
+  const el = ensureCursor()
+  el.style.opacity = "1"
+  cursorVisible = true
+  clearTimeout(cursorHideTimer)
+  cursorHideTimer = setTimeout(() => {
+    cursorVisible = false
+    if (cursorEl) cursorEl.style.opacity = "0"
+  }, 4000)
+}
+
+const fireAt = (type, x, y, extra) => {
+  const target = document.elementFromPoint(x, y)
+  if (!target) return null
+  const Ctor = type.startsWith("pointer") ? PointerEvent : MouseEvent
+  const init = {
+    view: window,
+    bubbles: true,
+    cancelable: true,
+    clientX: x,
+    clientY: y,
+    ...extra,
+  }
+  if (Ctor === PointerEvent) {
+    init.pointerId = 1
+    init.pointerType = "mouse"
+    init.isPrimary = true
+  }
+  target.dispatchEvent(new Ctor(type, init))
+  return target
+}
+
+const moveCursorBy = (dx, dy) => {
+  const el = ensureCursor()
+  if (!cursorPlaced) {
+    cursorX = window.innerWidth / 2
+    cursorY = window.innerHeight / 2
+    cursorPlaced = true
+  }
+  cursorX = Math.max(0, Math.min(window.innerWidth - 1, cursorX + dx))
+  cursorY = Math.max(0, Math.min(window.innerHeight - 1, cursorY + dy))
+  el.style.left = `${cursorX}px`
+  el.style.top = `${cursorY}px`
+  showCursor()
+
+  // Drive hover so dropdowns and hover states appear, like a real mouse.
+  const over = document.elementFromPoint(cursorX, cursorY)
+  if (over !== hovered) {
+    if (hovered)
+      hovered.dispatchEvent(
+        new MouseEvent("mouseout", {
+          view: window,
+          bubbles: true,
+          relatedTarget: over,
+        }),
+      )
+    if (over)
+      over.dispatchEvent(
+        new MouseEvent("mouseover", {
+          view: window,
+          bubbles: true,
+          relatedTarget: hovered,
+        }),
+      )
+    hovered = over
+  }
+  fireAt("pointermove", cursorX, cursorY)
+  fireAt("mousemove", cursorX, cursorY)
+}
+
+const clickCursor = () => {
+  const x = cursorX
+  const y = cursorY
+  fireAt("pointerdown", x, y, { button: 0, buttons: 1 })
+  fireAt("mousedown", x, y, { button: 0, buttons: 1 })
+  fireAt("pointerup", x, y, { button: 0 })
+  fireAt("mouseup", x, y, { button: 0 })
+  const target = fireAt("click", x, y, { button: 0 })
+  if (target && typeof target.focus === "function") target.focus()
+}
+
 // One remote action = both halves of the "mix": fire the key (for sites with
-// their own key handling, e.g. Netflix) and act on native focus (for sites that
-// only respond to clicks / Tab focus).
+// their own key handling, e.g. Netflix) and act on focus or the cursor.
 const handleAction = (action) => {
   const key = ACTION_KEY[action]
   if (!key) return
   pressKey(key)
 
   if (action === "ok") {
-    const element = document.activeElement
-    if (element && element !== document.body) element.click()
+    // If the trackpad cursor is active, click where it points; otherwise
+    // activate the focus-navigated element.
+    if (cursorVisible) {
+      clickCursor()
+    } else {
+      const element = document.activeElement
+      if (element && element !== document.body) element.click()
+    }
   } else if (action === "down" || action === "right") {
     moveFocus(true)
   } else if (action === "up" || action === "left") {
     moveFocus(false)
   }
-  console.log("[smartTV]", action)
 }
 
 api.runtime.onMessage.addListener((message) => {
   if (message?.type === "smarttv-toggle") toggle()
   else if (message?.type === "smarttv-press" && message.action)
     handleAction(message.action)
+  else if (message?.type === "smarttv-move")
+    moveCursorBy(message.dx, message.dy)
 })

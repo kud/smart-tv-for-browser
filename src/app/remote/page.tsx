@@ -21,13 +21,14 @@ import {
   RELAY_URL,
   roomUrl,
   helloMessage,
+  moveMessage,
   isPresenceMessage,
   parseMessage,
   type RemoteAction,
 } from "@/lib/remote"
 
 type Status = "idle" | "connecting" | "connected" | "error"
-type Mode = "buttons" | "swipe"
+type Mode = "buttons" | "trackpad"
 
 const STATUS_LABEL: Record<Status, string> = {
   idle: "Enter the code shown on your TV",
@@ -55,6 +56,10 @@ const RemotePage = () => {
     "buttons",
   )
   const socketRef = useRef<ReconnectingWebSocket | null>(null)
+  // Trackpad movement is coalesced to one message per animation frame so the
+  // cursor streams smoothly instead of flooding the socket on every touch event.
+  const pendingMove = useRef({ dx: 0, dy: 0 })
+  const moveFrame = useRef(0)
 
   const log = useCallback(
     (message: string) =>
@@ -130,13 +135,36 @@ const RemotePage = () => {
   // Close the socket when leaving the remote page.
   useEffect(() => () => socketRef.current?.close(), [])
 
-  const press = (action: RemoteAction) => {
+  const sendRaw = (payload: string) => {
     const socket = socketRef.current
     if (socket && socket.readyState === WebSocket.OPEN) {
-      socket.send(JSON.stringify({ type: "press", action }))
+      socket.send(payload)
+      return true
+    }
+    return false
+  }
+
+  const press = (action: RemoteAction) => {
+    if (sendRaw(JSON.stringify({ type: "press", action }))) {
       if (navigator.vibrate) navigator.vibrate(8)
     } else {
       log(`press "${action}" ignored — not connected`)
+    }
+  }
+
+  // Accumulate trackpad deltas and flush once per frame.
+  const flushMove = () => {
+    moveFrame.current = 0
+    const { dx, dy } = pendingMove.current
+    pendingMove.current = { dx: 0, dy: 0 }
+    if (dx || dy) sendRaw(moveMessage(dx, dy))
+  }
+
+  const moveCursor = (dx: number, dy: number) => {
+    pendingMove.current.dx += dx
+    pendingMove.current.dy += dy
+    if (!moveFrame.current) {
+      moveFrame.current = requestAnimationFrame(flushMove)
     }
   }
 
@@ -155,9 +183,10 @@ const RemotePage = () => {
         <ConnectedView
           mode={mode}
           onToggleMode={() =>
-            setMode((m) => (m === "buttons" ? "swipe" : "buttons"))
+            setMode((m) => (m === "buttons" ? "trackpad" : "buttons"))
           }
           onPress={press}
+          onMove={moveCursor}
           onOpenSheet={() => setSheetOpen(true)}
         />
       ) : (
@@ -246,11 +275,13 @@ const ConnectedView = ({
   mode,
   onToggleMode,
   onPress,
+  onMove,
   onOpenSheet,
 }: {
   mode: Mode
   onToggleMode: () => void
   onPress: (action: RemoteAction) => void
+  onMove: (dx: number, dy: number) => void
   onOpenSheet: () => void
 }) => (
   <>
@@ -271,7 +302,7 @@ const ConnectedView = ({
         className="flex items-center gap-2 rounded-full bg-white/5 px-3 py-1.5 text-xs text-tv-muted"
       >
         {mode === "buttons" ? <FiGrid /> : <FiCircle />}
-        {mode === "buttons" ? "Buttons" : "Swipe"}
+        {mode === "buttons" ? "Buttons" : "Trackpad"}
       </button>
     </header>
 
@@ -279,7 +310,7 @@ const ConnectedView = ({
       {mode === "buttons" ? (
         <ButtonsPad onPress={onPress} />
       ) : (
-        <SwipePad onPress={onPress} />
+        <TrackPad onPress={onPress} onMove={onMove} />
       )}
     </div>
 
@@ -380,38 +411,54 @@ const ButtonsPad = ({
   </div>
 )
 
-// A single round pad: swipe in a direction to move, tap (no real movement) to
-// select. Pointer events so it works with a mouse too.
-const SwipePad = ({ onPress }: { onPress: (action: RemoteAction) => void }) => {
-  const start = useRef<{ x: number; y: number } | null>(null)
+// A real trackpad: drag to stream relative cursor movement, tap (no real
+// movement) to click. Acceleration makes small flicks travel far, like a mouse.
+const TRACKPAD_GAIN = 1.7
+const TAP_SLOP = 8
 
-  const onUp = (event: React.PointerEvent) => {
-    const from = start.current
-    start.current = null
+const TrackPad = ({
+  onPress,
+  onMove,
+}: {
+  onPress: (action: RemoteAction) => void
+  onMove: (dx: number, dy: number) => void
+}) => {
+  const last = useRef<{ x: number; y: number } | null>(null)
+  const travel = useRef(0)
+
+  const onDown = (event: React.PointerEvent) => {
+    ;(event.target as Element).setPointerCapture?.(event.pointerId)
+    last.current = { x: event.clientX, y: event.clientY }
+    travel.current = 0
+  }
+
+  const onMovePointer = (event: React.PointerEvent) => {
+    const from = last.current
     if (!from) return
     const dx = event.clientX - from.x
     const dy = event.clientY - from.y
-    const ax = Math.abs(dx)
-    const ay = Math.abs(dy)
-    if (Math.max(ax, ay) < 28) {
-      onPress("ok")
-      return
-    }
-    if (ax > ay) onPress(dx > 0 ? "right" : "left")
-    else onPress(dy > 0 ? "down" : "up")
+    last.current = { x: event.clientX, y: event.clientY }
+    travel.current += Math.abs(dx) + Math.abs(dy)
+    if (dx || dy) onMove(dx * TRACKPAD_GAIN, dy * TRACKPAD_GAIN)
+  }
+
+  const onUp = () => {
+    const tapped = last.current && travel.current < TAP_SLOP
+    last.current = null
+    if (tapped) onPress("ok")
   }
 
   return (
     <div
-      onPointerDown={(event) => {
-        start.current = { x: event.clientX, y: event.clientY }
-      }}
+      onPointerDown={onDown}
+      onPointerMove={onMovePointer}
       onPointerUp={onUp}
-      className="flex aspect-square w-full max-w-[20rem] touch-none items-center justify-center rounded-full bg-white/8 text-center text-sm leading-relaxed text-tv-muted ring-1 ring-white/10 transition-colors active:bg-white/15"
+      onPointerCancel={onUp}
+      className="flex aspect-square w-full max-w-[20rem] touch-none items-center justify-center rounded-3xl bg-white/8 text-center text-sm leading-relaxed text-tv-muted ring-1 ring-white/10 transition-colors active:bg-white/15"
     >
-      swipe to move
+      drag to move the pointer
       <br />
-      tap to select
+      tap to click
     </div>
   )
 }
@@ -477,10 +524,10 @@ const Sheet = ({
             label="Buttons"
           />
           <ModeOption
-            active={mode === "swipe"}
-            onClick={() => setMode("swipe")}
+            active={mode === "trackpad"}
+            onClick={() => setMode("trackpad")}
             icon={<FiCircle />}
-            label="Swipe pad"
+            label="Trackpad"
           />
         </div>
 
