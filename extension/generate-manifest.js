@@ -84,8 +84,11 @@ const manifest = {
   description:
     "Press Alt+Shift+H on any channel to open the smartTV launcher — jump home or switch channels, like a remote.",
   // `alarms` keeps the background relay connection alive across MV3 service-
-  // worker evictions so the phone remote keeps working after leaving the app.
-  permissions: ["storage", "tabs", "alarms"],
+  // worker evictions; `declarativeNetRequest` spoofs the TV user-agent on
+  // YouTube so it serves the leanback TV interface.
+  permissions: ["storage", "tabs", "alarms", "declarativeNetRequest"],
+  // Required for the YouTube user-agent rewrite (modifyHeaders needs host access).
+  host_permissions: ["*://*.youtube.com/*"],
   // Chrome MV3 uses `service_worker`; Firefox MV3 uses `scripts`. Declaring both
   // keeps one manifest working in both — each browser uses what it supports.
   background: {
@@ -112,6 +115,12 @@ const manifest = {
       run_at: "document_start",
       all_frames: false,
       js: ["bridge.js"],
+    },
+    {
+      matches: ["*://*.youtube.com/*"],
+      run_at: "document_start",
+      all_frames: false,
+      js: ["yt-redirect.js"],
     },
   ],
 }

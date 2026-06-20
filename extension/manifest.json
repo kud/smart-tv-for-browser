@@ -6,7 +6,11 @@
   "permissions": [
     "storage",
     "tabs",
-    "alarms"
+    "alarms",
+    "declarativeNetRequest"
+  ],
+  "host_permissions": [
+    "*://*.youtube.com/*"
   ],
   "background": {
     "service_worker": "background.js",
@@ -73,6 +77,16 @@
       "all_frames": false,
       "js": [
         "bridge.js"
+      ]
+    },
+    {
+      "matches": [
+        "*://*.youtube.com/*"
+      ],
+      "run_at": "document_start",
+      "all_frames": false,
+      "js": [
+        "yt-redirect.js"
       ]
     }
   ]

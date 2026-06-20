@@ -127,16 +127,73 @@ const ensureConnected = async () => {
   }
 }
 
-// React to the website handing off (or clearing) the pairing code via bridge.js.
+// --- YouTube TV mode ------------------------------------------------------
+// Spoof a TV/console user-agent on youtube.com so it serves the leanback TV
+// interface (yt-redirect.js then sends the tab to /tv). A console UA — the one
+// the leanback wrappers use — rather than a key event, since YouTube gates the
+// TV UI on the device's user-agent.
+const LEANBACK_UA =
+  "Mozilla/5.0 (PS4; Leanback Shell) Cobalt/26.lts.0-qa (unlike Gecko)"
+const YT_RULE_ID = 1001
+
+const applyYtMode = async () => {
+  if (!api.declarativeNetRequest?.updateDynamicRules) return
+  try {
+    const { ytTvMode } = await api.storage.local.get("ytTvMode")
+    const enabled = ytTvMode !== false // default on
+    await api.declarativeNetRequest.updateDynamicRules({
+      removeRuleIds: [YT_RULE_ID],
+      addRules: enabled
+        ? [
+            {
+              id: YT_RULE_ID,
+              priority: 1,
+              action: {
+                type: "modifyHeaders",
+                requestHeaders: [
+                  {
+                    header: "user-agent",
+                    operation: "set",
+                    value: LEANBACK_UA,
+                  },
+                ],
+              },
+              condition: {
+                urlFilter: "||youtube.com/",
+                resourceTypes: [
+                  "main_frame",
+                  "sub_frame",
+                  "xmlhttprequest",
+                  "script",
+                  "media",
+                  "other",
+                ],
+              },
+            },
+          ]
+        : [],
+    })
+  } catch {
+    /* declarativeNetRequest unavailable (e.g. older Firefox) */
+  }
+}
+
+// React to the website handing off (or clearing) the pairing code via bridge.js,
+// and to the YouTube TV mode toggle changing.
 api.storage.onChanged.addListener((changes, area) => {
-  if (area !== "local" || !changes.smarttvSettings) return
-  connect(changes.smarttvSettings.newValue?.remoteCode || null)
+  if (area !== "local") return
+  if (changes.smarttvSettings)
+    connect(changes.smarttvSettings.newValue?.remoteCode || null)
+  if (changes.ytTvMode) applyYtMode()
 })
 
 // Connect whenever the service worker spins up.
 api.runtime.onStartup.addListener(ensureConnected)
 api.runtime.onInstalled.addListener(ensureConnected)
+api.runtime.onStartup.addListener(applyYtMode)
+api.runtime.onInstalled.addListener(applyYtMode)
 ensureConnected()
+applyYtMode()
 
 // MV3 evicts idle service workers; an open WebSocket extends the lifetime
 // (Chrome 116+), and this alarm wakes us to reconnect if it ever dropped.
