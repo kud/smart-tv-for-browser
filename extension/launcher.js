@@ -288,24 +288,30 @@ let cursorPlaced = false
 let cursorHideTimer = 0
 let hovered = null
 
+// A classic pointer arrow (tip at 0,0) — readable on any background, unlike a
+// flat coloured dot.
+const CURSOR_SVG =
+  '<svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">' +
+  '<path d="M0 0 L0 15.5 L4.2 11.8 L6.9 17.6 L9.4 16.4 L6.7 10.7 L12 10.6 Z" ' +
+  'fill="#fff" stroke="#111" stroke-width="1.4" stroke-linejoin="round"/></svg>'
+
 const ensureCursor = () => {
   if (cursorEl) return cursorEl
   cursorEl = document.createElement("div")
   cursorEl.id = "smarttv-cursor"
+  cursorEl.innerHTML = CURSOR_SVG
   Object.assign(cursorEl.style, {
     position: "fixed",
     left: "0px",
     top: "0px",
-    width: "22px",
-    height: "22px",
-    margin: "-11px 0 0 -11px",
-    borderRadius: "50%",
-    background: "rgba(56,189,248,.9)",
-    boxShadow: "0 0 0 2px rgba(255,255,255,.9), 0 2px 10px rgba(0,0,0,.5)",
+    width: "20px",
+    height: "20px",
     pointerEvents: "none",
     zIndex: "2147483647",
-    transition: "opacity .2s ease",
+    filter: "drop-shadow(0 1px 2px rgba(0,0,0,.55))",
+    transition: "opacity .15s ease",
     opacity: "0",
+    willChange: "transform",
   })
   ;(document.body || document.documentElement).appendChild(cursorEl)
   return cursorEl
@@ -350,8 +356,7 @@ const moveCursorBy = (dx, dy) => {
   }
   cursorX = Math.max(0, Math.min(window.innerWidth - 1, cursorX + dx))
   cursorY = Math.max(0, Math.min(window.innerHeight - 1, cursorY + dy))
-  el.style.left = `${cursorX}px`
-  el.style.top = `${cursorY}px`
+  el.style.transform = `translate(${cursorX}px, ${cursorY}px)`
   showCursor()
 
   // Drive hover so dropdowns and hover states appear, like a real mouse.

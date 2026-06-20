@@ -17,21 +17,25 @@ export const createVirtualCursor = (): VirtualCursor => {
   let hovered: Element | null = null
   let hideTimer = 0
 
+  // A classic pointer arrow (tip at 0,0) — readable on any background.
   const el = document.createElement("div")
   el.setAttribute("aria-hidden", "true")
+  el.innerHTML =
+    '<svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">' +
+    '<path d="M0 0 L0 15.5 L4.2 11.8 L6.9 17.6 L9.4 16.4 L6.7 10.7 L12 10.6 Z" ' +
+    'fill="#fff" stroke="#111" stroke-width="1.4" stroke-linejoin="round"/></svg>'
   Object.assign(el.style, {
     position: "fixed",
     left: "0px",
     top: "0px",
-    width: "22px",
-    height: "22px",
-    borderRadius: "50%",
-    background: "rgba(56,189,248,.9)",
-    boxShadow: "0 0 0 2px rgba(255,255,255,.95), 0 2px 10px rgba(0,0,0,.5)",
+    width: "20px",
+    height: "20px",
     pointerEvents: "none",
     zIndex: "2147483647",
-    transition: "opacity .2s ease",
+    filter: "drop-shadow(0 1px 2px rgba(0,0,0,.55))",
+    transition: "opacity .15s ease",
     opacity: "0",
+    willChange: "transform",
   } satisfies Partial<CSSStyleDeclaration>)
   document.body.appendChild(el)
 
@@ -77,7 +81,7 @@ export const createVirtualCursor = (): VirtualCursor => {
     }
     x = Math.max(0, Math.min(window.innerWidth - 1, x + dx))
     y = Math.max(0, Math.min(window.innerHeight - 1, y + dy))
-    el.style.transform = `translate(${x - 11}px, ${y - 11}px)`
+    el.style.transform = `translate(${x}px, ${y}px)`
     show()
 
     const over = document.elementFromPoint(x, y)
