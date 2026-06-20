@@ -3,18 +3,6 @@ const api = globalThis.browser ?? globalThis.chrome
 // Cloudflare relay — keep in sync with src/lib/remote.ts (RELAY_URL).
 const RELAY_URL = "wss://smart-tv-remote.kud-space.workers.dev"
 
-// Same allowlist the website uses (src/lib/remote.ts REMOTE_KEYS): maps a remote
-// action to the keyboard key dispatched on whatever page is active.
-const REMOTE_KEYS = {
-  up: "ArrowUp",
-  down: "ArrowDown",
-  left: "ArrowLeft",
-  right: "ArrowRight",
-  ok: "Enter",
-  back: "Escape",
-  menu: "m",
-}
-
 // The whole point of doing this in the background (not the web app): a service
 // worker outlives page navigations, so the phone keeps controlling the active
 // tab after the user launches a channel and leaves smartTV. One long-lived
@@ -43,15 +31,15 @@ const forwardAction = async (action) => {
     return
   }
 
-  const key = REMOTE_KEYS[action]
-  if (!key) return
+  // Hand the action (not a key) to the content script: it both fires the key
+  // event and advances native focus, so it can drive sites that ignore keys.
   try {
     const [tab] = await api.tabs.query({
       active: true,
       lastFocusedWindow: true,
     })
     if (tab?.id)
-      await api.tabs.sendMessage(tab.id, { type: "smarttv-press", key })
+      await api.tabs.sendMessage(tab.id, { type: "smarttv-press", action })
   } catch {
     // Active tab has no content script (a browser page, or a non-channel site).
   }
