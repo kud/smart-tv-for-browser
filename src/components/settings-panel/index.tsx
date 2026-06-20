@@ -17,7 +17,11 @@ import {
   FiRotateCcw,
   FiArrowDown,
   FiSmartphone,
+  FiMaximize,
+  FiMinimize,
 } from "react-icons/fi"
+
+import { useFullscreen } from "@/hooks/use-fullscreen"
 import clsx from "clsx"
 
 import type { CustomChannel } from "@/lib/services"
@@ -424,6 +428,8 @@ const SettingsPanelBody = ({
     isFocusBoundary: true,
   })
 
+  const { isFullscreen, toggle: toggleFullscreen } = useFullscreen()
+
   useEffect(() => {
     focusSelf()
   }, [focusSelf])
@@ -476,6 +482,11 @@ const SettingsPanelBody = ({
           label="Snappy scroll"
           enabled={snappyScroll}
           onToggle={onToggleSnappyScroll}
+        />
+        <ActionRow
+          label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+          icon={isFullscreen ? <FiMinimize /> : <FiMaximize />}
+          onActivate={toggleFullscreen}
         />
 
         <p className="mt-[2vh] mb-[0.5vh] px-[1.4vw] text-[1.7vh] font-semibold uppercase tracking-wider text-tv-text/80">

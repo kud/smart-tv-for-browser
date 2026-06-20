@@ -13,6 +13,7 @@ import { AnimatePresence } from "motion/react"
 import { usePersistedState } from "@/hooks/use-persisted-state"
 import { useIdle } from "@/hooks/use-idle"
 import { useTvKeys } from "@/hooks/use-tv-keys"
+import { useFullscreen } from "@/hooks/use-fullscreen"
 import { useRemoteReceiver } from "@/hooks/use-remote-receiver"
 import { makeCode } from "@/lib/remote"
 import {
@@ -111,6 +112,7 @@ export const TvShell = () => {
     null,
   )
   const { phoneConnected, extConnected } = useRemoteReceiver(remoteCode)
+  const { toggle: toggleFullscreen } = useFullscreen()
 
   // The phone remote's Home button: dismiss every overlay so we land back on the
   // bare launcher grid. (Off the app, the extension navigates the tab instead.)
@@ -348,6 +350,9 @@ export const TvShell = () => {
     },
     onHelp: () => {
       if (!idle) setShowHelp(true)
+    },
+    onFullscreen: () => {
+      if (!idle) toggleFullscreen()
     },
   })
 

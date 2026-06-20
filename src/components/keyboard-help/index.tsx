@@ -10,6 +10,7 @@ const SHORTCUTS: { keys: string[]; label: string }[] = [
   { keys: ["Tab", "⇧ Tab"], label: "Next / previous" },
   { keys: ["Esc", "Backspace"], label: "Back / close" },
   { keys: ["M"], label: "Open settings" },
+  { keys: ["F"], label: "Toggle fullscreen" },
   { keys: ["?"], label: "This help" },
 ]
 
