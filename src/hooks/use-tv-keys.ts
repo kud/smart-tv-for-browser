@@ -7,6 +7,7 @@ type TvKeyHandlers = {
   onBack?: () => void
   onMenu?: () => void
   onHelp?: () => void
+  onFullscreen?: () => void
 }
 
 const isTextField = (node: EventTarget | null) =>
@@ -18,7 +19,12 @@ const isTextField = (node: EventTarget | null) =>
  * Backspace), Menu (m / context-menu key), Help (?), and translate Tab /
  * Shift+Tab into spatial moves so the app is fully keyboard-operable.
  */
-export const useTvKeys = ({ onBack, onMenu, onHelp }: TvKeyHandlers) => {
+export const useTvKeys = ({
+  onBack,
+  onMenu,
+  onHelp,
+  onFullscreen,
+}: TvKeyHandlers) => {
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
       switch (event.key) {
@@ -38,6 +44,13 @@ export const useTvKeys = ({ onBack, onMenu, onHelp }: TvKeyHandlers) => {
           event.preventDefault()
           onHelp?.()
           break
+        case "f":
+        case "F":
+          // Skip while typing (e.g. the add-channel modal).
+          if (isTextField(event.target)) return
+          event.preventDefault()
+          onFullscreen?.()
+          break
         case "Tab":
           // Don't hijack Tab while editing text (e.g. the add-channel modal).
           if (isTextField(event.target)) return
@@ -48,5 +61,5 @@ export const useTvKeys = ({ onBack, onMenu, onHelp }: TvKeyHandlers) => {
     }
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
-  }, [onBack, onMenu, onHelp])
+  }, [onBack, onMenu, onHelp, onFullscreen])
 }
