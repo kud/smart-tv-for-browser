@@ -16,9 +16,20 @@ export const REMOTE_KEYS = {
   menu: "m",
 } as const
 
-export type RemoteAction = keyof typeof REMOTE_KEYS
+// Actions that map directly to a keyboard key. "home" is handled specially (the
+// website returns to the launcher; the extension navigates the tab back to
+// smartTV) so it lives outside REMOTE_KEYS.
+export type RemoteKeyAction = keyof typeof REMOTE_KEYS
+export type RemoteAction = RemoteKeyAction | "home"
 
 export type RemoteMessage = { type: "press"; action: RemoteAction }
+
+// On connect, each side announces its role so presence can be counted per kind:
+// "app" = the website, "ext" = the extension's background worker, "phone" = the
+// remote. Reported per-role so each side can show exactly who else is present.
+export type RemoteRole = "app" | "ext" | "phone"
+export const helloMessage = (role: RemoteRole) =>
+  JSON.stringify({ type: "hello", role })
 
 export const isRemoteMessage = (value: unknown): value is RemoteMessage => {
   if (!value || typeof value !== "object") return false
@@ -26,16 +37,26 @@ export const isRemoteMessage = (value: unknown): value is RemoteMessage => {
   return (
     message.type === "press" &&
     typeof message.action === "string" &&
-    message.action in REMOTE_KEYS
+    (message.action in REMOTE_KEYS || message.action === "home")
   )
 }
 
-type PresenceMessage = { type: "presence"; count: number }
+export type PresenceMessage = {
+  type: "presence"
+  app: number
+  ext: number
+  phone: number
+}
 
 export const isPresenceMessage = (value: unknown): value is PresenceMessage => {
   if (!value || typeof value !== "object") return false
   const message = value as Record<string, unknown>
-  return message.type === "presence" && typeof message.count === "number"
+  return (
+    message.type === "presence" &&
+    typeof message.app === "number" &&
+    typeof message.ext === "number" &&
+    typeof message.phone === "number"
+  )
 }
 
 export const parseMessage = (raw: string): unknown => {

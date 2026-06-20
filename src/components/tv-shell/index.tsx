@@ -110,7 +110,22 @@ export const TvShell = () => {
     "remoteCode",
     null,
   )
-  const { connected: remoteConnected } = useRemoteReceiver(remoteCode)
+  const { phoneConnected, extConnected } = useRemoteReceiver(remoteCode)
+
+  // The phone remote's Home button: dismiss every overlay so we land back on the
+  // bare launcher grid. (Off the app, the extension navigates the tab instead.)
+  useEffect(() => {
+    const goHome = () => {
+      setShowSettings(false)
+      setShowHelp(false)
+      setShowAbout(false)
+      setShowAddChannel(false)
+      setEditingChannel(null)
+      setLaunching(null)
+    }
+    window.addEventListener("smarttv-home", goHome)
+    return () => window.removeEventListener("smarttv-home", goHome)
+  }, [])
 
   const closeSettings = useCallback(() => setShowSettings(false), [])
   const toggleSettings = useCallback(
@@ -415,7 +430,8 @@ export const TvShell = () => {
         {showRemote && (
           <RemotePairing
             code={remoteCode}
-            connected={remoteConnected}
+            phoneConnected={phoneConnected}
+            extConnected={extConnected}
             onClose={() => setShowRemote(false)}
           />
         )}
