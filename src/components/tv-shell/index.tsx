@@ -437,6 +437,7 @@ export const TvShell = () => {
             code={remoteCode}
             phoneConnected={phoneConnected}
             extConnected={extConnected}
+            onRegenerate={() => setRemoteCode(makeCode())}
             onClose={() => setShowRemote(false)}
           />
         )}
