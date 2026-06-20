@@ -62,6 +62,17 @@
         "channels.js",
         "launcher.js"
       ]
+    },
+    {
+      "matches": [
+        "http://localhost:3000/*",
+        "https://smart-tv.kud.io/*"
+      ],
+      "run_at": "document_start",
+      "all_frames": false,
+      "js": [
+        "bridge.js"
+      ]
     }
   ]
 }
