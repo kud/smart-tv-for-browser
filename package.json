@@ -9,8 +9,10 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "build:extension": "node extension/generate-manifest.js",
-    "party:dev": "partykit dev",
-    "party:deploy": "partykit deploy"
+    "worker:dev": "wrangler dev",
+    "worker:deploy": "wrangler deploy",
+    "worker:tail": "wrangler tail",
+    "worker:typecheck": "tsc --noEmit -p worker/tsconfig.json"
   },
   "dependencies": {
     "@noriginmedia/norigin-spatial-navigation": "3.2.0",
@@ -24,6 +26,7 @@
     "react-icons": "5.6.0"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "4.20260620.1",
     "@tailwindcss/postcss": "4.3.1",
     "@types/node": "24.10.1",
     "@types/qrcode": "1.5.6",
@@ -31,10 +34,10 @@
     "@types/react-dom": "19.2.3",
     "eslint": "9.39.4",
     "eslint-config-next": "16.2.9",
-    "partykit": "0.0.115",
     "postcss": "8.4.49",
     "tailwindcss": "4.3.1",
-    "typescript": "6.0.3"
+    "typescript": "6.0.3",
+    "wrangler": "4.103.0"
   },
   "engines": {
     "node": ">=22.0.0"

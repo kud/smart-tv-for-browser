@@ -1,15 +1,60 @@
 const api = globalThis.browser ?? globalThis.chrome
 const DEFAULT_HOME = "http://localhost:3000/"
 const HOST_ID = "smarttv-launcher-host"
-const channels = globalThis.SMARTTV_CHANNELS || []
+const CUSTOM_CHANNEL_BG = "#1d1d26"
 
 let homeUrl = DEFAULT_HOME
+// Settings mirrored from the web app by bridge.js (null until first synced).
+let settings = null
+
 api.storage.local
-  .get("homeUrl")
-  .then(({ homeUrl: stored }) => {
-    if (stored) homeUrl = stored
+  .get(["homeUrl", "smarttvSettings"])
+  .then(({ homeUrl: storedHome, smarttvSettings }) => {
+    if (storedHome) homeUrl = storedHome
+    if (smarttvSettings) settings = smarttvSettings
   })
   .catch(() => {})
+
+// Keep both live so the overlay reflects the latest website settings without a
+// browser restart.
+api.storage.onChanged?.addListener((changes, area) => {
+  if (area !== "local") return
+  if (changes.homeUrl) homeUrl = changes.homeUrl.newValue || DEFAULT_HOME
+  if (changes.smarttvSettings) settings = changes.smarttvSettings.newValue
+})
+
+// Replicate the website's display logic: enabled built-ins (saved selection wins
+// over each channel's default) plus all custom channels, sorted by the saved
+// channelOrder (unknown ids fall to the end, keeping their natural order).
+const visibleChannels = () => {
+  const all = globalThis.SMARTTV_CHANNELS || []
+  if (!settings) return all
+
+  const selection = settings.services || {}
+  const enabled = all.filter((channel) =>
+    channel.id in selection ? selection[channel.id] : channel.defaultEnabled,
+  )
+
+  const customs = (settings.customChannels || []).map((channel) => ({
+    id: channel.id,
+    name: channel.name,
+    link: channel.link,
+    backgroundColor: channel.backgroundColor || CUSTOM_CHANNEL_BG,
+    textColor: null,
+    icon: null,
+    logo: channel.logo || null,
+  }))
+
+  const order = settings.channelOrder || []
+  const position = new Map(order.map((id, index) => [id, index]))
+  const rank = (channel) =>
+    position.has(channel.id) ? position.get(channel.id) : Infinity
+
+  return [...enabled, ...customs]
+    .map((channel, index) => ({ channel, index }))
+    .sort((a, b) => rank(a.channel) - rank(b.channel) || a.index - b.index)
+    .map(({ channel }) => channel)
+}
 
 const isOpen = () => Boolean(document.getElementById(HOST_ID))
 
@@ -26,20 +71,23 @@ const onKey = (event) => {
   }
 }
 
-const tilesHtml = channels
-  .map((channel, index) => {
-    const inner = channel.icon
-      ? `<img class="full" src="${channel.icon}" alt="${channel.name}">`
-      : channel.logo
-        ? `<img src="${channel.logo}" alt="${channel.name}">`
-        : `<span>${channel.name}</span>`
-    return `<a class="tile" href="${channel.link}" aria-label="${channel.name}"
+const renderTiles = () =>
+  visibleChannels()
+    .map((channel, index) => {
+      const inner = channel.icon
+        ? `<img class="full" src="${channel.icon}" alt="${channel.name}">`
+        : channel.logo
+          ? `<img src="${channel.logo}" alt="${channel.name}">`
+          : `<span>${channel.name}</span>`
+      return `<a class="tile" href="${channel.link}" aria-label="${channel.name}"
       style="--i:${index};background:${channel.backgroundColor};color:${channel.textColor || "#fff"}">${inner}</a>`
-  })
-  .join("")
+    })
+    .join("")
 
 const open = () => {
   if (isOpen()) return
+
+  const tilesHtml = renderTiles()
 
   const host = document.createElement("div")
   host.id = HOST_ID

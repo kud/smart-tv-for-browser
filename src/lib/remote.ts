@@ -1,6 +1,7 @@
 // Shared contract between the TV (receiver) and the phone remote page. Commands
-// travel through a PartyKit room named by the pairing code — see party/remote.ts
-// (relay), use-remote-receiver (TV) and app/remote (phone).
+// travel through a Cloudflare Worker + Durable Object room named by the pairing
+// code — see worker/index.ts (relay), use-remote-receiver (TV) and app/remote
+// (phone).
 
 // The only actions a remote may trigger. Each maps to the keyboard key the TV
 // already understands, so the receiver just re-dispatches it. This allowlist is
@@ -55,11 +56,15 @@ export const makeCode = () =>
     () => CODE_ALPHABET[Math.floor(Math.random() * CODE_ALPHABET.length)],
   ).join("")
 
-// PartyKit relay host: a local dev server in development, the deployed relay in
-// production. Override with NEXT_PUBLIC_PARTYKIT_HOST (e.g. to point at a LAN IP
-// running `partykit dev`).
-export const PARTYKIT_HOST =
-  process.env.NEXT_PUBLIC_PARTYKIT_HOST ??
+// Cloudflare Worker relay URL. Defaults to the deployed worker in production and
+// a local `wrangler dev` in development; override with NEXT_PUBLIC_RELAY_URL to
+// point at a different relay.
+export const RELAY_URL =
+  process.env.NEXT_PUBLIC_RELAY_URL ??
   (process.env.NODE_ENV === "development"
-    ? "127.0.0.1:1999"
-    : "smart-tv.kud.partykit.dev")
+    ? "ws://127.0.0.1:8787"
+    : "wss://smart-tv-remote.kud-space.workers.dev")
+
+// Each pairing code maps to one Durable Object instance (routed by `room`).
+export const roomUrl = (code: string) =>
+  `${RELAY_URL}/?room=${encodeURIComponent(code)}`

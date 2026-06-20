@@ -1,0 +1,12 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "smart-tv-remote",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-06-12",
+  "durable_objects": {
+    "bindings": [{ "name": "REMOTE_ROOM", "class_name": "RemoteRoom" }],
+  },
+  // SQLite-backed DO — required for Durable Objects on the free plan.
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["RemoteRoom"] }],
+  "observability": { "enabled": true },
+}

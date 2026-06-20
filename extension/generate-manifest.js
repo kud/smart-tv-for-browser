@@ -8,6 +8,25 @@ const services = JSON.parse(
   readFileSync(join(here, "../src/config/services.json"), "utf8"),
 )
 
+// Where the smartTV web app runs — the bridge content script mirrors the app's
+// saved settings (localStorage) into extension storage from these origins, so
+// the launcher shows the same channels in the same order as the website.
+const APP_ORIGINS = ["http://localhost:3000/*", "https://smart-tv.kud.io/*"]
+
+// Mirrors FAMOUS_BY_DEFAULT in src/lib/services.ts: the channels shown out of
+// the box before the user has saved any selection. Kept in sync by hand (two
+// small lists) so the extension's first-run view matches the website's.
+const FAMOUS_BY_DEFAULT = new Set([
+  "netflix",
+  "primeVideo",
+  "disneyplus",
+  "youtube",
+  "max",
+  "appletvplus",
+  "hulu",
+  "paramountplus",
+])
+
 // Single-source the channel domains from services.json so the extension only
 // asks for access to the sites it actually augments (friendlier install prompt).
 const matches = [
@@ -45,11 +64,15 @@ const toDataUri = (assetPath) => {
 
 // Carry `icon` and `logo` separately so the launcher can render them exactly
 // like the website: full-bleed for the app icon, contained for the wordmark.
-const channels = Object.values(services).map((service) => ({
+// `id` (the services.json key) and `defaultEnabled` let the launcher replicate
+// the website's enable/order logic from the synced settings.
+const channels = Object.entries(services).map(([id, service]) => ({
+  id,
   name: service.name,
   link: service.link,
   backgroundColor: service.backgroundColor,
   textColor: service.textColor ?? null,
+  defaultEnabled: FAMOUS_BY_DEFAULT.has(id),
   icon: service.icon ? toDataUri(service.icon) : null,
   logo: service.logo ? toDataUri(service.logo) : null,
 }))
@@ -81,6 +104,12 @@ const manifest = {
       run_at: "document_idle",
       all_frames: false,
       js: ["channels.js", "launcher.js"],
+    },
+    {
+      matches: APP_ORIGINS,
+      run_at: "document_start",
+      all_frames: false,
+      js: ["bridge.js"],
     },
   ],
 }

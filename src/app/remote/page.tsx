@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import PartySocket from "partysocket"
+import { WebSocket as ReconnectingWebSocket } from "partysocket"
 import {
   FiChevronUp,
   FiChevronDown,
@@ -13,7 +13,8 @@ import {
 
 import {
   CODE_LENGTH,
-  PARTYKIT_HOST,
+  RELAY_URL,
+  roomUrl,
   isPresenceMessage,
   parseMessage,
   type RemoteAction,
@@ -42,7 +43,7 @@ const RemotePage = () => {
   const [logs, setLogs] = useState<string[]>([])
   const [showLogs, setShowLogs] = useState(false)
   const [copied, setCopied] = useState(false)
-  const socketRef = useRef<PartySocket | null>(null)
+  const socketRef = useRef<ReconnectingWebSocket | null>(null)
 
   const copyLogs = () => {
     navigator.clipboard
@@ -66,7 +67,7 @@ const RemotePage = () => {
     (raw: string) => {
       const room = raw.trim().toUpperCase()
       if (room.length !== CODE_LENGTH) return
-      if (!PARTYKIT_HOST) {
+      if (!RELAY_URL) {
         setDetail("relay not configured")
         setStatus("error")
         return
@@ -76,7 +77,7 @@ const RemotePage = () => {
       setDetail(null)
       log(`joining room ${room}`)
 
-      const socket = new PartySocket({ host: PARTYKIT_HOST, room })
+      const socket = new ReconnectingWebSocket(roomUrl(room))
       socketRef.current = socket
 
       socket.addEventListener("open", () => log("relay connected"))
