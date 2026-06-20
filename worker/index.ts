@@ -20,6 +20,11 @@ export interface Env {
 
 const ROLES = ["app", "ext", "phone"]
 
+// Cap members per room. A normal session is at most app + ext + phone (plus a
+// little slack for a reconnect overlap or a second app tab). Rejecting beyond
+// this blocks a flood / silent extra devices from piling into a known code.
+const MAX_CONNECTIONS = 6
+
 export class RemoteRoom {
   constructor(private readonly state: DurableObjectState) {}
 
@@ -52,6 +57,10 @@ export class RemoteRoom {
   async fetch(request: Request): Promise<Response> {
     if (request.headers.get("Upgrade") !== "websocket") {
       return new Response("expected websocket", { status: 426 })
+    }
+
+    if (this.state.getWebSockets().length >= MAX_CONNECTIONS) {
+      return new Response("room full", { status: 503 })
     }
 
     const [client, server] = Object.values(new WebSocketPair())
