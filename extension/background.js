@@ -22,7 +22,27 @@ const REMOTE_KEYS = {
 let socket = null
 let currentCode = null
 
-const forwardPress = async (action) => {
+const DEFAULT_HOME = "http://localhost:3000/"
+
+// Forward a remote action to the active tab. "home" is special: rather than a
+// key, it navigates the tab back to smartTV — the real "get me out of Netflix"
+// case the web app can't do once you've left it.
+const forwardAction = async (action) => {
+  if (action === "home") {
+    try {
+      const { homeUrl } = await api.storage.local.get("homeUrl")
+      const [tab] = await api.tabs.query({
+        active: true,
+        lastFocusedWindow: true,
+      })
+      if (tab?.id)
+        await api.tabs.update(tab.id, { url: homeUrl || DEFAULT_HOME })
+    } catch {
+      /* no active tab */
+    }
+    return
+  }
+
   const key = REMOTE_KEYS[action]
   if (!key) return
   try {
@@ -63,6 +83,16 @@ const connect = (code) => {
   const ws = new WebSocket(`${RELAY_URL}/?room=${encodeURIComponent(code)}`)
   socket = ws
 
+  // Announce as the extension receiver so the relay reports us distinctly from
+  // the website and the phone (the pairing UI shows the extension's status).
+  ws.addEventListener("open", () => {
+    try {
+      ws.send(JSON.stringify({ type: "hello", role: "ext" }))
+    } catch {
+      /* socket closed before open settled */
+    }
+  })
+
   ws.addEventListener("message", (event) => {
     let data
     try {
@@ -71,7 +101,7 @@ const connect = (code) => {
       return
     }
     if (data?.type === "press" && typeof data.action === "string") {
-      forwardPress(data.action)
+      forwardAction(data.action)
     }
   })
   ws.addEventListener("close", () => {

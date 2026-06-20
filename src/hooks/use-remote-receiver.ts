@@ -7,6 +7,7 @@ import {
   isRemoteMessage,
   isPresenceMessage,
   parseMessage,
+  helloMessage,
   REMOTE_KEYS,
   RELAY_URL,
   roomUrl,
@@ -23,28 +24,41 @@ const pressKey = (key: string) => {
 // The socket lives as long as `code` is set, so the phone keeps controlling the
 // app after the pairing modal is closed.
 export const useRemoteReceiver = (code: string | null) => {
-  const [connected, setConnected] = useState(false)
+  const [phoneConnected, setPhoneConnected] = useState(false)
+  const [extConnected, setExtConnected] = useState(false)
 
   useEffect(() => {
     if (!code || !RELAY_URL) return
     const socket = new ReconnectingWebSocket(roomUrl(code))
 
+    // Announce on every (re)connect so the relay counts us as the app receiver.
+    const onOpen = () => socket.send(helloMessage("app"))
     const onMessage = (event: MessageEvent) => {
       const data = parseMessage(event.data)
       if (isPresenceMessage(data)) {
-        setConnected(data.count >= 2)
+        setPhoneConnected(data.phone >= 1)
+        setExtConnected(data.ext >= 1)
         return
       }
-      if (isRemoteMessage(data)) pressKey(REMOTE_KEYS[data.action])
+      if (isRemoteMessage(data)) {
+        if (data.action === "home") {
+          window.dispatchEvent(new CustomEvent("smarttv-home"))
+          return
+        }
+        pressKey(REMOTE_KEYS[data.action])
+      }
     }
 
+    socket.addEventListener("open", onOpen)
     socket.addEventListener("message", onMessage)
     return () => {
+      socket.removeEventListener("open", onOpen)
       socket.removeEventListener("message", onMessage)
       socket.close()
-      setConnected(false)
+      setPhoneConnected(false)
+      setExtConnected(false)
     }
   }, [code])
 
-  return { connected }
+  return { phoneConnected, extConnected }
 }

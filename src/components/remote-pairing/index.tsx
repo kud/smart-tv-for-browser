@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { motion } from "motion/react"
 import QRCode from "qrcode"
-import { FiSmartphone, FiCheckCircle } from "react-icons/fi"
+import { FiSmartphone, FiCheckCircle, FiPackage } from "react-icons/fi"
 import { pause, resume } from "@noriginmedia/norigin-spatial-navigation"
 
 import { CODE_LENGTH } from "@/lib/remote"
@@ -12,11 +12,13 @@ import { CODE_LENGTH } from "@/lib/remote"
 // (and the phone keeps controlling) after this modal is dismissed.
 export const RemotePairing = ({
   code,
-  connected,
+  phoneConnected,
+  extConnected,
   onClose,
 }: {
   code: string | null
-  connected: boolean
+  phoneConnected: boolean
+  extConnected: boolean
   onClose: () => void
 }) => {
   const [qr, setQr] = useState<string | null>(null)
@@ -62,7 +64,7 @@ export const RemotePairing = ({
           <FiSmartphone /> Phone remote
         </div>
 
-        {connected ? (
+        {phoneConnected ? (
           <div className="flex flex-col items-center gap-[1.4vh] py-[4vh]">
             <FiCheckCircle className="text-[10vh] text-emerald-400" />
             <p className="text-[2.6vh] font-semibold text-tv-text">
@@ -108,14 +110,58 @@ export const RemotePairing = ({
           </>
         )}
 
+        <div className="flex w-full flex-col gap-[0.8vh] border-t border-white/10 pt-[1.6vh]">
+          <StatusRow
+            icon={<FiSmartphone />}
+            label="Phone"
+            on={phoneConnected}
+            onText="Connected"
+            offText="Waiting to pair"
+          />
+          <StatusRow
+            icon={<FiPackage />}
+            label="Extension"
+            on={extConnected}
+            onText="Active — controls any site"
+            offText="Not detected — control stops when you leave smartTV"
+          />
+        </div>
+
         <button
           type="button"
           onClick={onClose}
           className="mt-[1vh] rounded-full bg-white/10 px-[2.4vw] py-[1.2vh] text-[2vh] text-tv-text transition-colors hover:bg-white/20"
         >
-          {connected ? "Done" : "Cancel"}
+          {phoneConnected ? "Done" : "Cancel"}
         </button>
       </motion.div>
     </motion.div>
   )
 }
+
+const StatusRow = ({
+  icon,
+  label,
+  on,
+  onText,
+  offText,
+}: {
+  icon: React.ReactNode
+  label: string
+  on: boolean
+  onText: string
+  offText: string
+}) => (
+  <div className="flex items-center gap-[0.8vw] text-[1.7vh]">
+    <span
+      className={`h-[1.4vh] w-[1.4vh] shrink-0 rounded-full ${
+        on ? "bg-emerald-400" : "bg-white/25"
+      }`}
+    />
+    <span className="flex items-center gap-[0.4vw] text-tv-muted">{icon}</span>
+    <span className="font-medium text-tv-text">{label}</span>
+    <span className={on ? "text-emerald-400" : "text-tv-muted"}>
+      {on ? onText : offText}
+    </span>
+  </div>
+)
