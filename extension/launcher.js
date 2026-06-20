@@ -288,27 +288,41 @@ let cursorPlaced = false
 let cursorHideTimer = 0
 let hovered = null
 
-// A classic pointer arrow (tip at 0,0) — readable on any background, unlike a
-// flat coloured dot.
-const CURSOR_SVG =
-  '<svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">' +
-  '<path d="M0 0 L0 15.5 L4.2 11.8 L6.9 17.6 L9.4 16.4 L6.7 10.7 L12 10.6 Z" ' +
-  'fill="#fff" stroke="#111" stroke-width="1.4" stroke-linejoin="round"/></svg>'
+// A classic pointer arrow (tip at 0,0), built via the DOM rather than innerHTML
+// so it survives Trusted Types sites (e.g. YouTube) that throw on innerHTML.
+const SVG_NS = "http://www.w3.org/2000/svg"
+const buildCursorArrow = () => {
+  const svg = document.createElementNS(SVG_NS, "svg")
+  svg.setAttribute("width", "22")
+  svg.setAttribute("height", "22")
+  svg.setAttribute("viewBox", "0 0 20 20")
+  const path = document.createElementNS(SVG_NS, "path")
+  path.setAttribute(
+    "d",
+    "M0 0 L0 15.5 L4.2 11.8 L6.9 17.6 L9.4 16.4 L6.7 10.7 L12 10.6 Z",
+  )
+  path.setAttribute("fill", "#fff")
+  path.setAttribute("stroke", "#111")
+  path.setAttribute("stroke-width", "1.4")
+  path.setAttribute("stroke-linejoin", "round")
+  svg.appendChild(path)
+  return svg
+}
 
 const ensureCursor = () => {
   if (cursorEl) return cursorEl
   cursorEl = document.createElement("div")
   cursorEl.id = "smarttv-cursor"
-  cursorEl.innerHTML = CURSOR_SVG
+  cursorEl.appendChild(buildCursorArrow())
   Object.assign(cursorEl.style, {
     position: "fixed",
     left: "0px",
     top: "0px",
-    width: "20px",
-    height: "20px",
+    width: "22px",
+    height: "22px",
     pointerEvents: "none",
     zIndex: "2147483647",
-    filter: "drop-shadow(0 1px 2px rgba(0,0,0,.55))",
+    filter: "drop-shadow(0 1px 2px rgba(0,0,0,.6))",
     transition: "opacity .15s ease",
     opacity: "0",
     willChange: "transform",
