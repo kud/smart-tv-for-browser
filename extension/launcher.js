@@ -132,8 +132,13 @@ const open = () => {
         display: flex; align-items: center; gap: 8px; border: 0; cursor: pointer;
         padding: 10px 18px; border-radius: 999px; font: 600 15px system-ui; color: #fff;
         background: rgba(255,255,255,.12);
+        outline: 2px solid transparent;
+        transition: background .12s ease, outline-color .12s ease;
       }
-      .home:hover, .home:focus-visible { background: rgba(255,255,255,.22); outline: none; }
+      .home:hover { background: rgba(255,255,255,.22); }
+      /* Was "outline: none" on both, which removed the only focus indicator this
+         button had. Same transparent-outline idiom as .tile below. */
+      .home:focus-visible { background: rgba(255,255,255,.22); outline-color: #fff; outline-offset: 2px; }
       .label { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: #9b9ba6; margin: 4px 0 12px; }
       .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px; }
       .tile {
