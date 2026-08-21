@@ -48,6 +48,28 @@
         font: 600 15px system-ui;
         cursor: pointer;
       }
+      /* The launcher's idiom: a transparent outline in the base state so the
+       * ring appears without shifting layout. White rather than the browser
+       * default, which lands as low-contrast blue on a near-black page. */
+      input,
+      button,
+      .toggle input {
+        outline: 2px solid transparent;
+        outline-offset: 2px;
+        transition: outline-color 0.12s ease;
+      }
+      input:focus-visible,
+      button:focus-visible,
+      .toggle input:focus-visible {
+        outline-color: #fff;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        input,
+        button,
+        .toggle input {
+          transition: none;
+        }
+      }
       #status {
         margin-left: 12px;
         color: #34d399;
