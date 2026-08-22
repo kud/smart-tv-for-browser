@@ -5,7 +5,14 @@ const config = [
   ...coreWebVitals,
   ...typescript,
   {
-    ignores: [".next/**", "node_modules/**", "public/sw.js", "worker/**"],
+    ignores: [
+      ".next/**",
+      "node_modules/**",
+      "public/sw.js",
+      "worker/**",
+      // Vendored build of @kud/webext, re-synced by copy — not ours to lint.
+      "extension/vendor/**",
+    ],
   },
 ]
 

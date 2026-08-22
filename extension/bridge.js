@@ -1,5 +1,3 @@
-const api = globalThis.browser ?? globalThis.chrome
-
 // Runs on the smartTV web app and mirrors its saved settings (localStorage) into
 // extension storage, so the launcher overlay on channel sites shows the same
 // channels, in the same order, as the website. A content script shares the host
@@ -26,9 +24,7 @@ const sync = () => {
   const serialised = JSON.stringify(snapshot())
   if (serialised === last) return
   last = serialised
-  api.storage.local
-    .set({ smarttvSettings: JSON.parse(serialised) })
-    .catch(() => {})
+  settings.set({ smarttvSettings: JSON.parse(serialised) }).catch(() => {})
 }
 
 sync()

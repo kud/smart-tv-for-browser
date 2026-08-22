@@ -1,36 +1,26 @@
-const api = globalThis.browser ?? globalThis.chrome
-const DEFAULT_HOME = "https://smart-tv.kud.io/"
 const HOST_ID = "smarttv-launcher-host"
 const CUSTOM_CHANNEL_BG = "#1d1d26"
 
-let homeUrl = DEFAULT_HOME
-// Settings mirrored from the web app by bridge.js (null until first synced).
-let settings = null
-// Debug logging, toggled in the extension options.
-let debug = false
+// The overlay renders before the first `get()` resolves, so it starts on the
+// declared defaults rather than on undefined. `onChange` then keeps it live, so
+// the overlay reflects the latest website settings without a browser restart.
+let values = settings.defaults
 
 // When on, log the remote event chain to the page console so issues on sites we
 // don't own (Netflix etc.) can be diagnosed without a debugger.
 const log = (...args) => {
-  if (debug) console.log("[smartTV]", ...args)
+  if (values.debug) console.log("[smartTV]", ...args)
 }
 
-api.storage.local
-  .get(["homeUrl", "smarttvSettings", "debug"])
-  .then(({ homeUrl: storedHome, smarttvSettings, debug: storedDebug }) => {
-    if (storedHome) homeUrl = storedHome
-    if (smarttvSettings) settings = smarttvSettings
-    debug = Boolean(storedDebug)
+settings
+  .get()
+  .then((stored) => {
+    values = stored
   })
   .catch(() => {})
 
-// Keep both live so the overlay reflects the latest website settings without a
-// browser restart.
-api.storage.onChanged?.addListener((changes, area) => {
-  if (area !== "local") return
-  if (changes.homeUrl) homeUrl = changes.homeUrl.newValue || DEFAULT_HOME
-  if (changes.smarttvSettings) settings = changes.smarttvSettings.newValue
-  if (changes.debug) debug = Boolean(changes.debug.newValue)
+settings.onChange((stored) => {
+  values = stored
 })
 
 // Replicate the website's display logic: enabled built-ins (saved selection wins
@@ -38,14 +28,17 @@ api.storage.onChanged?.addListener((changes, area) => {
 // channelOrder (unknown ids fall to the end, keeping their natural order).
 const visibleChannels = () => {
   const all = globalThis.SMARTTV_CHANNELS || []
-  if (!settings) return all
+  // The web app's own settings, mirrored into storage by bridge.js — null until
+  // the user has opened smartTV at least once with this extension installed.
+  const mirrored = values.smarttvSettings
+  if (!mirrored) return all
 
-  const selection = settings.services || {}
+  const selection = mirrored.services || {}
   const enabled = all.filter((channel) =>
     channel.id in selection ? selection[channel.id] : channel.defaultEnabled,
   )
 
-  const customs = (settings.customChannels || []).map((channel) => ({
+  const customs = (mirrored.customChannels || []).map((channel) => ({
     id: channel.id,
     name: channel.name,
     link: channel.link,
@@ -55,7 +48,7 @@ const visibleChannels = () => {
     logo: channel.logo || null,
   }))
 
-  const order = settings.channelOrder || []
+  const order = mirrored.channelOrder || []
   const position = new Map(order.map((id, index) => [id, index]))
   const rank = (channel) =>
     position.has(channel.id) ? position.get(channel.id) : Infinity
@@ -182,11 +175,11 @@ const open = () => {
   root.querySelector(".home").addEventListener("click", () => {
     // Skip the boot splash when returning to the launcher.
     try {
-      const url = new URL(homeUrl)
+      const url = new URL(values.homeUrl)
       url.hash = "nosplash"
       window.location.href = url.toString()
     } catch {
-      window.location.href = homeUrl
+      window.location.href = values.homeUrl
     }
   })
   ;(document.body || document.documentElement).appendChild(host)
@@ -585,7 +578,7 @@ const writeEditable = (el, value) => {
 // focused, so the phone can pop its keyboard.
 const reportFocus = (editing, value) => {
   try {
-    api.runtime.sendMessage({ type: "smarttv-focus", editing, value })
+    webext.api.runtime.sendMessage({ type: "smarttv-focus", editing, value })
   } catch {
     /* background asleep */
   }
@@ -605,7 +598,7 @@ document.addEventListener(
   true,
 )
 
-api.runtime.onMessage.addListener((message) => {
+webext.api.runtime.onMessage.addListener((message) => {
   if (message?.type === "smarttv-toggle") toggle()
   else if (message?.type === "smarttv-press" && message.action) {
     log("press", message.action)

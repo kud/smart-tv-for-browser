@@ -1,4 +1,8 @@
-const api = globalThis.browser ?? globalThis.chrome
+// Chrome MV3 loads one service-worker file, so the vendored library and the
+// schema arrive via importScripts; Firefox lists all three in
+// `background.scripts` and already has them, which is what the guard tests.
+if (typeof webext === "undefined")
+  importScripts("vendor/webext.js", "settings.js")
 
 // Cloudflare relay — keep in sync with src/lib/remote.ts (RELAY_URL).
 const RELAY_URL = "wss://smart-tv-remote.kud-space.workers.dev"
@@ -10,21 +14,22 @@ const RELAY_URL = "wss://smart-tv-remote.kud-space.workers.dev"
 let socket = null
 let currentCode = null
 
-const DEFAULT_HOME = "https://smart-tv.kud.io/"
-
 // Forward a remote action to the active tab. "home" is special: rather than a
 // key, it navigates the tab back to smartTV — the real "get me out of Netflix"
 // case the web app can't do once you've left it.
 const forwardAction = async (action) => {
   if (action === "home") {
     try {
-      const { homeUrl } = await api.storage.local.get("homeUrl")
-      const [tab] = await api.tabs.query({
+      const { homeUrl } = await settings.get()
+      // Not `sendToActiveTab`: this navigates the tab rather than messaging it,
+      // so it goes through `invoke` — the same promise/callback adapter, minus
+      // the assumption that a content script is listening.
+      const [tab] = await webext.invoke(webext.api.tabs, "query", {
         active: true,
         lastFocusedWindow: true,
       })
       if (tab?.id)
-        await api.tabs.update(tab.id, { url: homeUrl || DEFAULT_HOME })
+        await webext.invoke(webext.api.tabs, "update", tab.id, { url: homeUrl })
     } catch {
       /* no active tab */
     }
@@ -40,44 +45,20 @@ const forwardAction = async (action) => {
 
   // Hand the action (not a key) to the content script: it both fires the key
   // event and advances native focus, so it can drive sites that ignore keys.
-  try {
-    const [tab] = await api.tabs.query({
-      active: true,
-      lastFocusedWindow: true,
-    })
-    if (tab?.id)
-      await api.tabs.sendMessage(tab.id, { type: "smarttv-press", action })
-  } catch {
-    // Active tab has no content script (a browser page, or a non-channel site).
-  }
+  await forwardToTab({ type: "smarttv-press", action })
 }
 
 // Relative cursor movement from the phone's trackpad → the active tab's content
 // script, which moves an on-screen pointer and synthesises hover/click.
-const forwardMove = async (dx, dy) => {
-  try {
-    const [tab] = await api.tabs.query({
-      active: true,
-      lastFocusedWindow: true,
-    })
-    if (tab?.id)
-      await api.tabs.sendMessage(tab.id, { type: "smarttv-move", dx, dy })
-  } catch {
-    // Active tab has no content script.
-  }
-}
+const forwardMove = (dx, dy) => forwardToTab({ type: "smarttv-move", dx, dy })
 
-const forwardToTab = async (payload) => {
-  try {
-    const [tab] = await api.tabs.query({
-      active: true,
-      lastFocusedWindow: true,
-    })
-    if (tab?.id) await api.tabs.sendMessage(tab.id, payload)
-  } catch {
-    // Active tab has no content script.
-  }
-}
+// `lastFocused` rather than `current`: every caller here is driven from outside
+// the browser UI — a relay socket, an alarm — where "current window" can resolve
+// to the background context's own. `sendToActiveTab` resolves undefined when no
+// content script is listening, which is the expected case on a browser-internal
+// page rather than a failure, so there is nothing left to catch.
+const forwardToTab = (payload) =>
+  webext.sendToActiveTab(payload, { window: "lastFocused" })
 
 const disconnect = () => {
   if (!socket) return
@@ -143,7 +124,7 @@ const connect = (code) => {
 
 const ensureConnected = async () => {
   try {
-    const { smarttvSettings } = await api.storage.local.get("smarttvSettings")
+    const { smarttvSettings } = await settings.get()
     connect(smarttvSettings?.remoteCode || null)
   } catch {
     /* storage unavailable */
@@ -160,13 +141,12 @@ const LEANBACK_UA =
 const YT_RULE_ID = 1001
 
 const applyYtMode = async () => {
-  if (!api.declarativeNetRequest?.updateDynamicRules) return
+  if (!webext.api.declarativeNetRequest?.updateDynamicRules) return
   try {
-    const { ytTvMode } = await api.storage.local.get("ytTvMode")
-    const enabled = ytTvMode !== false // default on
-    await api.declarativeNetRequest.updateDynamicRules({
+    const { ytTvMode } = await settings.get()
+    await webext.api.declarativeNetRequest.updateDynamicRules({
       removeRuleIds: [YT_RULE_ID],
-      addRules: enabled
+      addRules: ytTvMode
         ? [
             {
               id: YT_RULE_ID,
@@ -199,24 +179,23 @@ const applyYtMode = async () => {
 
 // React to the website handing off (or clearing) the pairing code via bridge.js,
 // and to the YouTube TV mode toggle changing.
-api.storage.onChanged.addListener((changes, area) => {
-  if (area !== "local") return
-  if (changes.smarttvSettings)
-    connect(changes.smarttvSettings.newValue?.remoteCode || null)
-  if (changes.ytTvMode) applyYtMode()
+settings.onChange((values, changed) => {
+  if ("smarttvSettings" in changed)
+    connect(values.smarttvSettings?.remoteCode || null)
+  if ("ytTvMode" in changed) applyYtMode()
 })
 
 // Connect whenever the service worker spins up.
-api.runtime.onStartup.addListener(ensureConnected)
-api.runtime.onInstalled.addListener(ensureConnected)
-api.runtime.onStartup.addListener(applyYtMode)
-api.runtime.onInstalled.addListener(applyYtMode)
+webext.api.runtime.onStartup.addListener(ensureConnected)
+webext.api.runtime.onInstalled.addListener(ensureConnected)
+webext.api.runtime.onStartup.addListener(applyYtMode)
+webext.api.runtime.onInstalled.addListener(applyYtMode)
 ensureConnected()
 applyYtMode()
 
 // Content scripts report text-field focus here; relay it to the phone so it can
 // pop its keyboard.
-api.runtime.onMessage.addListener((message) => {
+webext.api.runtime.onMessage.addListener((message) => {
   if (
     message?.type === "smarttv-focus" &&
     socket &&
@@ -234,8 +213,8 @@ api.runtime.onMessage.addListener((message) => {
 
 // MV3 evicts idle service workers; an open WebSocket extends the lifetime
 // (Chrome 116+), and this alarm wakes us to reconnect if it ever dropped.
-api.alarms.create("smarttv-keepalive", { periodInMinutes: 0.5 })
-api.alarms.onAlarm.addListener((alarm) => {
+webext.api.alarms.create("smarttv-keepalive", { periodInMinutes: 0.5 })
+webext.api.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === "smarttv-keepalive") ensureConnected()
 })
 
@@ -243,20 +222,21 @@ api.alarms.onAlarm.addListener((alarm) => {
 // and the toolbar icon. Works even when the page has focus, because it's the
 // extension (not the host page) handling the trigger.
 const toggleLauncher = async (tab) => {
-  const target =
-    tab ?? (await api.tabs.query({ active: true, currentWindow: true }))[0]
-  if (!target?.id) return
-  try {
-    await api.tabs.sendMessage(target.id, { type: "smarttv-toggle" })
-  } catch {
-    // No content script on this tab (e.g. a browser-internal page) — ignore.
-  }
+  const message = { type: "smarttv-toggle" }
+  // Driven by the toolbar icon, which hands us the tab it was clicked on, or by
+  // the keyboard command, which does not. No catch either way: a tab with no
+  // content script (a browser-internal page) resolves undefined rather than
+  // rejecting.
+  if (!tab?.id) return void (await webext.sendToActiveTab(message))
+  await webext
+    .invoke(webext.api.tabs, "sendMessage", tab.id, message)
+    .catch(() => {})
 }
 
-api.commands.onCommand.addListener((command) => {
+webext.api.commands.onCommand.addListener((command) => {
   if (command === "toggle-launcher") toggleLauncher()
 })
 
 // Clicking the toolbar icon opens the launcher (no popup is set, so onClicked
 // fires).
-api.action?.onClicked.addListener((tab) => toggleLauncher(tab))
+webext.api.action?.onClicked.addListener((tab) => toggleLauncher(tab))
