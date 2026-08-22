@@ -77,6 +77,11 @@ const channels = Object.entries(services).map(([id, service]) => ({
   logo: service.logo ? toDataUri(service.logo) : null,
 }))
 
+// @kud/webext is vendored rather than imported: `web-ext build` zips the source
+// directory as-is, with no bundler, and a content script is a classic script with
+// no `import`. Both files must load before any script that reads `settings`.
+const SHARED = ["vendor/webext.js", "settings.js"]
+
 const manifest = {
   manifest_version: 3,
   name: "smartTV",
@@ -91,9 +96,11 @@ const manifest = {
   host_permissions: ["*://*.youtube.com/*"],
   // Chrome MV3 uses `service_worker`; Firefox MV3 uses `scripts`. Declaring both
   // keeps one manifest working in both — each browser uses what it supports.
+  // Chrome takes a single file, so background.js importScripts the vendored
+  // library and the schema itself; Firefox gets all three listed here.
   background: {
     service_worker: "background.js",
-    scripts: ["background.js"],
+    scripts: [...SHARED, "background.js"],
   },
   options_ui: { page: "options.html", open_in_tab: true },
   icons: { 192: "icon-192.png", 512: "icon-512.png" },
@@ -114,13 +121,13 @@ const manifest = {
       matches,
       run_at: "document_idle",
       all_frames: false,
-      js: ["channels.js", "launcher.js"],
+      js: [...SHARED, "channels.js", "launcher.js"],
     },
     {
       matches: APP_ORIGINS,
       run_at: "document_start",
       all_frames: false,
-      js: ["bridge.js"],
+      js: [...SHARED, "bridge.js"],
     },
   ],
 }
