@@ -1,0 +1,4 @@
+# Vendored build of @kud/webext, re-synced by copy. Formatting it breaks byte-parity
+# with the published artifact, which is what makes a stale copy detectable by diff
+# rather than by guesswork.
+extension/vendor/

@@ -1,5 +1,3 @@
-// Vendored from @kud/webext — do not edit by hand.
-// Re-sync: cp node_modules/@kud/webext/dist/index.global.js extension/vendor/webext.js
 var webext = (function (exports) {
   'use strict';
 
