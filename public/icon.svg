@@ -1,17 +1,10 @@
-<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="SmartTV">
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="SmartTV">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#1b1d2b"/>
-      <stop offset="1" stop-color="#06060a"/>
-    </linearGradient>
-    <linearGradient id="screen" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#3a3f5c"/>
-      <stop offset="1" stop-color="#11131d"/>
+    <linearGradient id="tv" x1="84" y1="256" x2="428" y2="256" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#00bff0"/>
+      <stop offset="1" stop-color="#52f4c2"/>
     </linearGradient>
   </defs>
-  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
-  <rect x="96" y="128" width="320" height="208" rx="24" fill="url(#screen)" stroke="#f5f5f7" stroke-width="10"/>
-  <path d="M232 200 L300 232 L232 264 Z" fill="#f5f5f7"/>
-  <rect x="196" y="356" width="120" height="14" rx="7" fill="#f5f5f7"/>
-  <rect x="168" y="388" width="176" height="12" rx="6" fill="#9b9ba6"/>
+  <path fill="#06060a" d="M112 0H400C474 0 512 38 512 112V400C512 474 474 512 400 512H112C38 512 0 474 0 400V112C0 38 38 0 112 0Z"/>
+  <path fill="url(#tv)" d="M84 158H242V197H186V355H138V197H84ZM242 158H291L331 294L376 158H428L358 355H306Z"/>
 </svg>
