@@ -5,6 +5,6 @@
       <stop offset="1" stop-color="#52f4c2"/>
     </linearGradient>
   </defs>
-  <path fill="#06060a" d="M112 0H400C474 0 512 38 512 112V400C512 474 474 512 400 512H112C38 512 0 474 0 400V112C0 38 38 0 112 0Z"/>
+  <path fill="#06060a" d="M0 0H512V512H0Z"/>
   <path fill="url(#tv)" d="M84 158H242V197H186V355H138V197H84ZM242 158H291L331 294L376 158H428L358 355H306Z"/>
 </svg>

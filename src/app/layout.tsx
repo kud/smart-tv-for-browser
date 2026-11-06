@@ -4,6 +4,8 @@ import { Providers } from "./providers"
 import "./globals.css"
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://tv.beansontoast.app"),
+  alternates: { canonical: "/" },
   applicationName: "SmartTV",
   title: "SmartTV for Browser",
   description:

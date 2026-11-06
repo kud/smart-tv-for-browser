@@ -82,6 +82,7 @@
     {
       "matches": [
         "http://localhost:3000/*",
+        "https://tv.beansontoast.app/*",
         "https://smart-tv.kud.io/*"
       ],
       "run_at": "document_start",

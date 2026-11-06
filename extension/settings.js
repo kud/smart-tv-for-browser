@@ -16,7 +16,7 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const settings = webext.defineSettings(
   {
-    homeUrl: "https://smart-tv.kud.io/",
+    homeUrl: "https://tv.beansontoast.app/",
     ytTvMode: true,
     debug: false,
     smarttvSettings: null,

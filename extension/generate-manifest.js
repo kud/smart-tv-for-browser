@@ -11,7 +11,11 @@ const services = JSON.parse(
 // Where the smartTV web app runs — the bridge content script mirrors the app's
 // saved settings (localStorage) into extension storage from these origins, so
 // the launcher shows the same channels in the same order as the website.
-const APP_ORIGINS = ["http://localhost:3000/*", "https://smart-tv.kud.io/*"]
+const APP_ORIGINS = [
+  "http://localhost:3000/*",
+  "https://tv.beansontoast.app/*",
+  "https://smart-tv.kud.io/*",
+]
 
 // Mirrors FAMOUS_BY_DEFAULT in src/lib/services.ts: the channels shown out of
 // the box before the user has saved any selection. Kept in sync by hand (two
