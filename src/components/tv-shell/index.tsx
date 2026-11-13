@@ -49,6 +49,7 @@ import { WelcomeBack } from "@/components/welcome-back"
 import { KeyboardHelp } from "@/components/keyboard-help"
 import { AboutModal } from "@/components/about-modal"
 import { RemotePairing } from "@/components/remote-pairing"
+import { SiteFooter } from "@/components/site-footer"
 
 // Set by the companion extension's Home button so returning to the launcher
 // doesn't replay the full boot animation. Read via useSyncExternalStore so the
@@ -378,6 +379,7 @@ export const TvShell = () => {
               onLaunch={launch}
             />
           </div>
+          <SiteFooter />
         </div>
       )}
 
