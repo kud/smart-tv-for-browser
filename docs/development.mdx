@@ -1,0 +1,76 @@
+---
+title: "🛠️ Development"
+description: "Running the app locally, editing the channel list, regenerating the extension and working on the relay."
+---
+
+The app is Next.js with React and TypeScript, styled with Tailwind CSS. It needs
+Node 22 or later.
+
+## ▶️ Scripts
+
+```bash
+npm install
+npm run dev          # http://localhost:3000
+```
+
+| Script                     | What it runs                                         |
+| -------------------------- | ---------------------------------------------------- |
+| `npm run dev`              | Development server                                   |
+| `npm run build`            | Production build                                     |
+| `npm run start`            | Serve the production build                           |
+| `npm run lint`             | ESLint                                               |
+| `npm run typecheck`        | `tsc --noEmit`                                       |
+| `npm run build:extension`  | Regenerate the extension's manifest and channel list |
+| `npm run worker:dev`       | Run the remote relay locally with Wrangler           |
+| `npm run worker:deploy`    | Deploy the relay to Cloudflare                       |
+| `npm run worker:tail`      | Stream the deployed relay's logs                     |
+| `npm run worker:typecheck` | Type-check the relay                                 |
+
+## 📺 Adding or editing channels
+
+Built-in channels live in `src/config/services.json`, keyed by an id:
+
+```json
+"netflix": {
+  "name": "Netflix",
+  "logo": "/logo-netflix.svg",
+  "link": "https://www.netflix.com",
+  "backgroundColor": "#0b0b0b"
+}
+```
+
+| Field             | Required | Purpose                                                              |
+| ----------------- | -------- | -------------------------------------------------------------------- |
+| `name`            | yes      | Display name                                                         |
+| `link`            | yes      | The site the channel opens                                           |
+| `backgroundColor` | yes      | Tile background                                                      |
+| `logo`            | yes      | Path to a logo in `public/`; set it to `""` to render `name` as a text wordmark |
+| `icon`            | no       | A full-bleed app icon, preferred over `logo` and drawn edge to edge  |
+| `splashColor`     | no       | Launch-splash background; falls back to `backgroundColor`            |
+| `textColor`       | no       | Wordmark colour, for contrast on light backgrounds                   |
+
+Put image files in `public/`. Which channels show on a first visit is set by
+the default list in `src/lib/services.ts`; `extension/generate-manifest.js`
+keeps its own copy of that list, so change both together.
+
+After editing channels, run `npm run build:extension`. It rewrites
+`extension/manifest.json`, so the extension only asks for access to the channel
+domains smartTV knows about, and `extension/channels.js`, with every logo
+inlined.
+
+## 📡 The remote relay
+
+The phone remote talks through a Cloudflare Worker in `worker/index.ts`, backed
+by one Durable Object per pairing code. Each connection announces its role
+(the app, the extension or the phone); the room forwards every other message to
+the rest of the room and reports who is present.
+
+In development the app connects to a local relay at `ws://127.0.0.1:8787`, so
+start it alongside the app:
+
+```bash
+npm run worker:dev
+```
+
+Set `NEXT_PUBLIC_RELAY_URL` to point the app at a different relay. The
+extension's relay address is set separately, in `extension/background.js`.

@@ -1,0 +1,73 @@
+---
+title: "🧩 Companion extension"
+description: "The Manifest V3 extension that adds a launcher overlay to channel sites and keeps the phone remote working after you leave smartTV."
+---
+
+Once smartTV hands a channel off to its website, the page belongs to Netflix or
+YouTube, not to smartTV. The companion extension, in the repository's
+`extension/` folder, fills that gap. It works in Chrome, Edge and Firefox.
+
+It never strips security headers or embeds sites; it only overlays a way to
+navigate.
+
+## 📥 Loading it
+
+**Chrome or Edge**
+
+1. Open `chrome://extensions` and turn on **Developer mode**.
+2. Choose **Load unpacked** and select the `extension/` folder.
+
+**Firefox**
+
+1. Open `about:debugging#/runtime/this-firefox`.
+2. Choose **Load Temporary Add-on** and select `extension/manifest.json`.
+
+## 🚪 The launcher overlay
+
+On any built-in channel's site, press `Alt+Shift+H` or click the toolbar icon to
+open the smartTV launcher. It offers **Home**, which returns to smartTV and skips
+the boot animation, and a **Switch channel** grid. Press the same shortcut or
+`Esc` to dismiss it. Nothing is drawn on the page until you summon it, and the
+overlay lives in a Shadow DOM, so the site's styles cannot touch it.
+
+The grid shows the same channels, in the same order, as the website: the
+extension mirrors smartTV's saved settings whenever you open the app with the
+extension installed. Until then it falls back to the eight default channels.
+
+Change the shortcut at `chrome://extensions/shortcuts` in Chrome, or in Firefox
+under **Add-ons Manager → ⚙ → Manage Extension Shortcuts**. The launcher cannot
+open on browser-internal pages such as `chrome://`, `about:`, the add-on stores
+or the PDF viewer.
+
+## 📱 Remote control on channel sites
+
+When a phone is paired, the extension's background worker joins the same relay
+room as smartTV, so the phone keeps working after you leave the app. On a
+channel site it:
+
+- sends each button press to the page as a real key event and also moves the
+  browser's own focus, so sites that ignore arrow keys can still be driven;
+- drives the page's largest video directly for Play, Mute and volume, falling
+  back to the site's own keys when there is no video;
+- moves an on-screen pointer from the phone's trackpad, with hover and click;
+- types into the focused text field from the phone's keyboard;
+- navigates the tab back to smartTV on **Home**, and opens the launcher on
+  **Channels**.
+
+## ⚙️ Options
+
+Open the extension's options page to change:
+
+| Option          | Default                       | What it does                                                         |
+| --------------- | ----------------------------- | -------------------------------------------------------------------- |
+| smartTV URL     | `https://tv.beansontoast.app/` | Where **Home** takes you. Point it at `http://localhost:3000/` for local development |
+| YouTube TV mode | On                            | Sends a TV user-agent on `youtube.com/tv` so YouTube serves its TV interface; plain youtube.com stays as it is |
+| Debug logging   | Off                           | Logs the remote event chain to the page console, prefixed `[smartTV]` |
+
+## 🔐 Permissions
+
+The extension asks for `storage`, `tabs`, `alarms` (to reconnect to the relay
+if the background worker is suspended) and `declarativeNetRequest` (for YouTube
+TV mode), plus host access to `youtube.com`. Its content scripts run only on
+the built-in channel domains and on the smartTV app's own origins, which keeps
+the install prompt narrower than access to every site.

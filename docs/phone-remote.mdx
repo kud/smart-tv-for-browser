@@ -1,0 +1,53 @@
+---
+title: "📱 Phone remote"
+description: "Pairing a phone with a six-character code, and what the remote controls on smartTV and beyond."
+---
+
+Any phone with a browser can become the remote. Both devices connect to a small
+relay on the internet rather than to each other, so they need not share a
+network.
+
+## 🔗 Pairing
+
+1. On the TV, open **Settings → Phone remote — pair over Wi-Fi**.
+2. Scan the QR code with your phone, or open `/remote` on the same smartTV
+   address and type the six-character code shown on screen.
+3. The pairing dialogue switches to **Phone connected**.
+
+Codes avoid look-alike characters (no `0`, `O`, `1` or `I`). The code is kept
+after you close the dialogue, so the phone stays in control. **New code**
+generates a fresh one and disconnects the current phone.
+
+The dialogue also shows whether the
+[companion extension](/projects/smart-tv-for-browser/docs/extension) is
+detected. Without it, control stops when you leave smartTV for a channel; with
+it, the remote keeps working on the channel's site.
+
+## 🎮 The buttons
+
+| Button                 | What it does                                                           |
+| ---------------------- | ---------------------------------------------------------------------- |
+| Up, Down, Left, Right, OK | Move focus and select, exactly like the arrow keys and `Enter`      |
+| Back                   | Same as `Esc`                                                          |
+| Menu                   | Opens Settings                                                         |
+| Home                   | On smartTV, closes every overlay; on a channel site, navigates the tab back to smartTV (extension needed) |
+| Channels               | Opens the extension's launcher overlay on the current site             |
+| Vol −, Play, Mute, Vol + | Media controls for the video on the current site                     |
+| Keyboard               | Opens a full-screen text field on the phone; what you type is sent to the TV |
+
+## 🖱️ D-pad or trackpad
+
+While smartTV itself is connected, the phone shows a D-pad. When only the
+extension is listening (you are on a channel's site), the phone switches to a
+trackpad: drag to move an on-screen pointer, tap to click. On YouTube's TV
+interface the trackpad's movement is turned into arrow key presses instead,
+since that interface expects a remote.
+
+When a text field gains focus on the TV, the phone opens its keyboard, already
+filled with the field's current value.
+
+## 🔒 What a remote can send
+
+Only an allowlisted set of actions is accepted: the directions, OK, Back, Menu,
+Home, Channels and the four media controls, plus pointer movement and text.
+Anything else is ignored. A room accepts at most six connections at once.

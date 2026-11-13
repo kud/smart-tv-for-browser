@@ -1,0 +1,80 @@
+---
+title: "📺 Usage"
+description: "Driving the home screen from the keyboard, and everything the Settings panel can change."
+---
+
+smartTV is built for remote-style navigation: focus moves by geometry, like a
+TV, and no mouse is needed. A mouse or touch still works everywhere.
+
+## ⌨️ Keys
+
+The same list appears in the app under **Settings → Keyboard shortcuts**, or by
+pressing `?`.
+
+| Key                  | Action                                  |
+| -------------------- | --------------------------------------- |
+| `←` `↑` `→` `↓`      | Move focus between channels             |
+| `Enter`              | Open the focused channel                |
+| `Tab` / `Shift+Tab`  | Next / previous                         |
+| `Esc` or `Backspace` | Back: close the open panel or dialogue  |
+| `M`                  | Open or close Settings                  |
+| `F`                  | Toggle fullscreen                       |
+| `?`                  | Show the keyboard shortcuts             |
+
+`F` and `Tab` are left alone while you are typing in a text field. The
+context-menu key also opens Settings.
+
+There is an on-screen remote as well (Up, Down, Left, Right, OK, Back, Menu)
+for mouse or touch use; it can be shown or hidden.
+
+## 🎬 Opening a channel
+
+Opening a channel plays a short launch splash, then the tab navigates to the
+channel's website, about a second later. smartTV does not embed the site: it
+hands off completely. To come back, use the
+[companion extension](/projects/smart-tv-for-browser/docs/extension), whose Home
+button returns you to smartTV without replaying the boot animation.
+
+## ⚙️ Settings
+
+Open Settings with `M`, the remote's **Menu** button, or the gear. Every choice
+is saved in the browser's `localStorage` and restored on your next visit.
+
+| Setting           | Values                                                    |
+| ----------------- | --------------------------------------------------------- |
+| Layout            | Grid (default) or Slider                                  |
+| Tile size         | Auto (default), or 120 to 320 px in steps of 20; `←`/`→` adjust and wrap round |
+| Icon shape        | Rounded (default), Square or Circle                       |
+| Clock             | 24-hour (default) or 12-hour                              |
+| Navigation sounds | On by default                                             |
+| Snappy scroll     | On by default                                             |
+| Fullscreen        | Enter or exit fullscreen                                  |
+
+### 📡 Channels
+
+Out of the box, eight channels are shown: Netflix, Prime Video, Disney+,
+YouTube, Max, Apple TV+, Hulu and Paramount+. Every other built-in channel is
+opt-in. In the **Channels** section you can:
+
+- toggle any channel to show or hide it;
+- drag to reorder, or use **Default** to restore the original order and **A–Z**
+  to sort alphabetically;
+- **Add channel** with a name, a URL and an optional image URL. A URL without a
+  scheme gets `https://` in front. Custom channels can be edited or removed
+  later from the same list.
+
+The **Remote** section opens phone pairing (see
+[Phone remote](/projects/smart-tv-for-browser/docs/phone-remote)), and
+**About & help** holds the shortcuts sheet and an About dialogue.
+
+## 🌙 Screensaver
+
+After 45 seconds without a key press, pointer movement or scroll, an ambient
+clock fades in. Any activity dismisses it, and a short welcome-back greeting
+follows.
+
+## 📲 Install as an app
+
+smartTV ships a web app manifest and a service worker that caches the app
+shell, so your browser's **Install** or **Add to Home Screen** runs it
+full-screen, like a native launcher.
