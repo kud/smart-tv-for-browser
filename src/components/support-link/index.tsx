@@ -7,9 +7,7 @@ import {
   useSyncExternalStore,
   type MouseEvent,
 } from "react"
-import { pause, resume } from "@noriginmedia/norigin-spatial-navigation"
-
-import { FooterLink } from "@/components/footer-link"
+import clsx from "clsx"
 
 const emptySubscribe = () => () => {}
 
@@ -52,9 +50,11 @@ const fieldClass =
   "w-full rounded-[1.2vh] border border-white/15 bg-black/40 px-[1.4vw] py-[1.4vh] text-[max(15px,2.2vh)] text-tv-text outline-none transition-colors focus:border-sky-400"
 
 const buttonClass =
-  "rounded-full px-[2vw] py-[1.2vh] text-[max(14px,2vh)] transition-colors focus-visible:[box-shadow:var(--focus-ring)]"
+  "whitespace-nowrap rounded-full px-[max(16px,2vw)] py-[max(10px,1.2vh)] text-[max(14px,2vh)] transition-colors focus-visible:[box-shadow:var(--focus-ring)]"
 
-export const SupportLink = () => {
+// Lives in the About panel, which already pauses spatial navigation, so the
+// arrows edit text in the note without moving the cursor behind it.
+export const SupportLink = ({ className }: { className?: string }) => {
   const address = useSyncExternalStore(
     emptySubscribe,
     supportAddress,
@@ -64,11 +64,8 @@ export const SupportLink = () => {
   const form = useRef<HTMLFormElement>(null)
   const [open, setOpen] = useState(false)
 
-  // Spatial navigation sleeps while the note is open, so the arrows edit text
-  // instead of moving the cursor behind the dialog.
   useEffect(() => {
     if (!open) return
-    pause()
     // The phone remote's Back and Home arrive on the window, not the dialog.
     const close = () => dialog.current?.close()
     const onKeyDown = (event: KeyboardEvent) => {
@@ -79,7 +76,6 @@ export const SupportLink = () => {
     return () => {
       window.removeEventListener("keydown", onKeyDown)
       window.removeEventListener("smarttv-home", close)
-      resume()
     }
   }, [open])
 
@@ -98,10 +94,6 @@ export const SupportLink = () => {
     if (showNote()) event.preventDefault()
   }
 
-  const onEnterPress = () => {
-    if (!showNote() && address) window.location.href = mailUrl()
-  }
-
   const closed = () => {
     setOpen(false)
     const element = dialog.current
@@ -117,13 +109,13 @@ export const SupportLink = () => {
 
   return (
     <>
-      <FooterLink
+      <a
         href={address ? mailUrl() : undefined}
         onClick={onClick}
-        onEnterPress={onEnterPress}
+        className={clsx("cursor-pointer", className)}
       >
         Get support
-      </FooterLink>
+      </a>
       <dialog
         ref={dialog}
         className="support m-auto whitespace-normal w-[46vw] min-w-[min(360px,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] border-0 bg-transparent p-0 text-tv-text backdrop:bg-black/70 backdrop:backdrop-blur-sm"

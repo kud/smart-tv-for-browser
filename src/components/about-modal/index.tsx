@@ -5,10 +5,12 @@ import { motion } from "motion/react"
 import { FiCoffee } from "react-icons/fi"
 import { pause, resume } from "@noriginmedia/norigin-spatial-navigation"
 
+import { SupportLink } from "@/components/support-link"
 import { Wordmark } from "@/components/wordmark"
 import { APP_VERSION } from "@/lib/version"
 
 const KOFI_URL = "https://ko-fi.com/B4I421NYZC"
+const HOME_URL = "https://beansontoast.app"
 
 const TECH = [
   "Next.js",
@@ -39,7 +41,7 @@ export const AboutModal = ({ onClose }: { onClose: () => void }) => {
       <motion.div
         role="dialog"
         aria-label="About smartTV"
-        className="w-[46vw] min-w-[360px] rounded-[2vh] bg-tv-elevated p-[3vh] shadow-2xl"
+        className="w-[46vw] min-w-[min(360px,calc(100vw-2rem))] rounded-[2vh] bg-tv-elevated p-[3vh] shadow-2xl"
         initial={{ scale: 0.95, y: 14 }}
         animate={{ scale: 1, y: 0 }}
         exit={{ scale: 0.95, opacity: 0 }}
@@ -72,28 +74,38 @@ export const AboutModal = ({ onClose }: { onClose: () => void }) => {
           ))}
         </div>
 
-        <div className="flex items-center justify-between gap-[1vw]">
+        <div className="flex flex-wrap items-center gap-[max(8px,1vw)]">
           <a
             href={KOFI_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-[0.6vw] rounded-full px-[1.6vw] py-[1.2vh] text-[2vh] font-semibold text-white transition-transform active:translate-y-[1px]"
+            className="inline-flex items-center gap-[0.6vw] whitespace-nowrap rounded-full px-[max(16px,1.6vw)] py-[1.2vh] text-[2vh] font-semibold text-white transition-transform active:translate-y-[1px]"
             style={{ backgroundColor: "#72a4f2" }}
           >
             <FiCoffee /> Support me on Ko-fi
           </a>
+          <SupportLink className="whitespace-nowrap rounded-full bg-white/10 px-[max(16px,1.6vw)] py-[1.2vh] text-[2vh] text-tv-text transition-colors hover:bg-white/20" />
           <button
             type="button"
             onClick={onClose}
-            className="rounded-full bg-white/10 px-[2vw] py-[1.2vh] text-[2vh] text-tv-text transition-colors hover:bg-white/20"
+            className="ml-auto rounded-full bg-white/10 px-[2vw] py-[1.2vh] text-[2vh] text-tv-text transition-colors hover:bg-white/20"
           >
             Close
           </button>
         </div>
 
         <p className="mt-[2vh] text-[1.4vh] text-tv-muted">
-          Not affiliated with any of the listed services. Logos belong to their
-          respective owners.
+          A{" "}
+          <a
+            href={HOME_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline-offset-2 hover:text-tv-text hover:underline"
+          >
+            beansontoast.app
+          </a>{" "}
+          project. Not affiliated with any of the listed services. Logos belong
+          to their respective owners.
         </p>
       </motion.div>
     </motion.div>

@@ -1,14 +1,17 @@
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 
-import { SiteFooter } from "@/components/site-footer"
-import { composeSupportMail, supportAddress } from "@/components/support-link"
+import { AboutModal } from "@/components/about-modal"
+import {
+  composeSupportMail,
+  SupportLink,
+  supportAddress,
+} from "@/components/support-link"
 
-describe("site footer", () => {
+describe("support link", () => {
   it("serves the support link with no address in it", () => {
-    const html = renderToStaticMarkup(<SiteFooter />)
+    const html = renderToStaticMarkup(<SupportLink />)
     expect(html).toContain("Get support")
-    expect(html).toContain('href="https://beansontoast.app"')
     expect(html).not.toContain("mailto")
     expect(html).not.toContain(String.fromCharCode(64))
   })
@@ -33,9 +36,15 @@ describe("site footer", () => {
   })
 
   it("serves the support dialog closed, with a labelled form", () => {
-    const html = renderToStaticMarkup(<SiteFooter />)
+    const html = renderToStaticMarkup(<SupportLink />)
     expect(html).toMatch(/<dialog[^>]*aria-labelledby="support-title"/)
     expect(html).not.toMatch(/<dialog[^>]* open/)
     expect(html).not.toMatch(/<p[^>]*>(?:(?!<\/p>).)*<dialog/)
+  })
+
+  it("lives in the About panel, not on the TV screen", () => {
+    const html = renderToStaticMarkup(<AboutModal onClose={() => {}} />)
+    expect(html).toContain("Get support")
+    expect(html).toContain('href="https://beansontoast.app"')
   })
 })
