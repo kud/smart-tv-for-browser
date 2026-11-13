@@ -1,11 +1,35 @@
+<div align="center">
+
+📺
+
 # smartTV for Browser
 
-A **smart-TV home screen that runs in your browser**. It behaves like a real
-TV: an animated power-on boot, a 10-foot interface you drive with a remote-style
-**D-pad**, glassy app tiles that glow and scale on focus, an idle screensaver,
-and an installable **PWA** so you can run it full-screen on any device.
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)
+![Next.js](https://img.shields.io/badge/Next.js-000000?style=flat-square&logo=next.js&logoColor=white)
+![PWA](https://img.shields.io/badge/PWA-5A0FC8?style=flat-square&logo=pwa&logoColor=white)
 
-## 📺 Using smartTV
+**An immersive, intelligent, and intuitive interface for watching television right from your computer**
+
+<a href="https://kud.io/projects/smart-tv-for-browser">Website</a> · <a href="https://kud.io/projects/smart-tv-for-browser/docs">Documentation</a>
+
+</div>
+
+## Features
+
+A **smart-TV home screen that runs in your browser**. It behaves like a real TV: an animated power-on boot, a 10-foot interface you drive with a remote-style **D-pad**, glassy app tiles that glow and scale on focus, an idle screensaver, and an installable **PWA** so you can run it full-screen on any device.
+
+- **Remote-control navigation** — arrow keys or the on-screen D-pad, no mouse required
+- **Apps that launch like a TV OS** — a launch splash, then the channel's website full-screen
+- **Your line-up** — show or hide each app and change the tile size, remembered between visits
+- **Ambient screensaver** — a clock fades in after about 45 seconds idle
+- **Installable** — a PWA with an offline-capable app shell
+- **Companion extension** — a Home button and hotkey on every channel site to get back
+
+## Install
+
+Open it in any browser at [smart-tv-for-browser.vercel.app](https://smart-tv-for-browser.vercel.app), then use your browser's _Install_ / _Add to Home Screen_ to run it full-screen like a native TV launcher. To get back to smartTV from a channel, add the companion extension in [`extension/`](extension/).
+
+## Usage
 
 It's built around remote-control navigation — no mouse required.
 
@@ -14,7 +38,7 @@ It's built around remote-control navigation — no mouse required.
 | Move focus    | Arrow keys (← ↑ → ↓) | D-pad            |
 | Open the app  | `Enter`              | **OK**           |
 | Back / close  | `Esc` or `Backspace` | **Back**         |
-| Open settings | `m` or the ⚙ button  | **Menu**         |
+| Open settings | `m` or the ⚙ button | **Menu**         |
 
 - **Opening an app** plays a launch splash, then hands off to the channel's
   website directly — like a real TV OS launching an app full-screen. To get
@@ -29,16 +53,44 @@ It's built around remote-control navigation — no mouse required.
 - **Install as an app**: use your browser's _Install_ / _Add to Home Screen_ to
   run smartTV full-screen, offline-capable, like a native TV launcher.
 
-## 🧑‍💻 Development
+## Architecture
 
-```bash
+- **Next.js 16** (App Router, Turbopack) · **React 19** · **TypeScript**
+- **Tailwind CSS 4** (CSS-first config + design tokens in `globals.css`)
+- **Motion** (Framer Motion) for the boot, focus springs, splash and screensaver
+- **@noriginmedia/norigin-spatial-navigation** for geometry-based D-pad focus
+- **PWA**: native `app/manifest.ts` + a hand-authored service worker
+  (`public/sw.js`) caching the app shell — no build-tool coupling
+
+```
+src/
+├─ app/            layout, page, providers (spatial nav + SW), manifest, globals
+├─ components/     tv-shell, boot-sequence, status-bar, app-grid, app-tile,
+│                  settings-panel, on-screen-remote, screensaver, launch-splash,
+│                  wordmark
+├─ hooks/          use-persisted-state, use-idle, use-tv-keys
+├─ lib/            services (typed config helpers)
+└─ config/         services.json
+```
+
+## Accessibility
+
+Tiles and controls are real focusable elements with `aria-label`s; the spatial
+cursor mirrors onto real DOM focus (screen-reader friendly), and all animation
+honours `prefers-reduced-motion`.
+
+## Development
+
+```sh
+git clone https://github.com/kud/smart-tv-for-browser.git
+cd smart-tv-for-browser
 npm install
 npm run dev          # http://localhost:3000
 ```
 
 Other scripts:
 
-```bash
+```sh
 npm run build        # production build
 npm run start        # serve the production build
 npm run lint         # ESLint
@@ -62,28 +114,4 @@ Drop the logo SVG in `public/` and reference it via `logo`. If you omit `logo`
 (set it to `""`), the tile renders a styled **text wordmark** of `name` instead —
 add an optional `textColor` for contrast on light backgrounds.
 
-## 🏗️ Architecture
-
-- **Next.js 16** (App Router, Turbopack) · **React 19** · **TypeScript**
-- **Tailwind CSS 4** (CSS-first config + design tokens in `globals.css`)
-- **Motion** (Framer Motion) for the boot, focus springs, splash and screensaver
-- **@noriginmedia/norigin-spatial-navigation** for geometry-based D-pad focus
-- **PWA**: native `app/manifest.ts` + a hand-authored service worker
-  (`public/sw.js`) caching the app shell — no build-tool coupling
-
-```
-src/
-├─ app/            layout, page, providers (spatial nav + SW), manifest, globals
-├─ components/     tv-shell, boot-sequence, status-bar, app-grid, app-tile,
-│                  settings-panel, on-screen-remote, screensaver, launch-splash,
-│                  wordmark
-├─ hooks/          use-persisted-state, use-idle, use-tv-keys
-├─ lib/            services (typed config helpers)
-└─ config/         services.json
-```
-
-## ♿ Accessibility
-
-Tiles and controls are real focusable elements with `aria-label`s; the spatial
-cursor mirrors onto real DOM focus (screen-reader friendly), and all animation
-honours `prefers-reduced-motion`.
+📚 **Full documentation → [smart-tv-for-browser/docs](https://kud.io/projects/smart-tv-for-browser/docs)**
