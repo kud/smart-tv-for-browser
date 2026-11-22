@@ -7,6 +7,11 @@ const publicDir = join(here, "../public")
 const services = JSON.parse(
   readFileSync(join(here, "../src/config/services.json"), "utf8"),
 )
+// The root package.json is what `git lzv` bumps, so the extension ships the
+// same version as the app instead of a literal that never moves.
+const { version } = JSON.parse(
+  readFileSync(join(here, "../package.json"), "utf8"),
+)
 
 // Where the smartTV web app runs — the bridge content script mirrors the app's
 // saved settings (localStorage) into extension storage from these origins, so
@@ -89,7 +94,7 @@ const SHARED = ["vendor/webext.js", "settings.js"]
 const manifest = {
   manifest_version: 3,
   name: "smartTV",
-  version: "0.1.0",
+  version,
   description:
     "Press Alt+Shift+H on any channel to open the smartTV launcher — jump home or switch channels, like a remote.",
   // `alarms` keeps the background relay connection alive across MV3 service-
